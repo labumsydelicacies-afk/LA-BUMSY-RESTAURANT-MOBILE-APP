@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 import { useCartStore } from "../stores/cartStore";
@@ -9,7 +10,7 @@ function resolveImageUrl(imageUrl) {
   return `${base}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
 }
 
-export default function FoodCard({ food }) {
+function FoodCard({ food }) {
   const addToCart = useCartStore((state) => state.addToCart);
 
   return (
@@ -72,3 +73,5 @@ export default function FoodCard({ food }) {
     </article>
   );
 }
+
+export default memo(FoodCard);

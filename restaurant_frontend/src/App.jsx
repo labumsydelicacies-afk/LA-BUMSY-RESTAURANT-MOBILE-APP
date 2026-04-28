@@ -1,18 +1,19 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import { useEffect, useState } from "react";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import Home from "./pages/user/Home";
-import FoodDetail from "./pages/user/FoodDetail";
-import Cart from "./pages/user/Cart";
-import Checkout from "./pages/user/Checkout";
-import UserOrders from "./pages/user/Orders";
-import AdminDashboard from "./pages/admin/Dashboard";
-import AdminMenu from "./pages/admin/Menu";
-import AdminOrders from "./pages/admin/Orders";
-import RiderDashboard from "./pages/rider/Dashboard";
+import { Suspense, lazy, useEffect, useState } from "react";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import { useAuthStore } from "./stores/authStore";
+
+const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const Home = lazy(() => import("./pages/user/Home"));
+const FoodDetail = lazy(() => import("./pages/user/FoodDetail"));
+const Cart = lazy(() => import("./pages/user/Cart"));
+const Checkout = lazy(() => import("./pages/user/Checkout"));
+const UserOrders = lazy(() => import("./pages/user/Orders"));
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const AdminMenu = lazy(() => import("./pages/admin/Menu"));
+const AdminOrders = lazy(() => import("./pages/admin/Orders"));
+const RiderDashboard = lazy(() => import("./pages/rider/Dashboard"));
 
 function Toast({ message, onClose }) {
   if (!message) return null;
@@ -53,88 +54,90 @@ export default function App() {
   return (
     <div className="mx-auto min-h-screen max-w-3xl bg-brandCream pb-20 font-body text-[#1c1c1c]">
       <Toast message={toast} onClose={() => setToast("")} />
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+      <Suspense fallback={<div className="px-4 py-6 text-sm text-gray-500">Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        <Route
-          path="/user/home"
-          element={
-            <ProtectedRoute allowedRoles={["user"]}>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/user/food/:id"
-          element={
-            <ProtectedRoute allowedRoles={["user"]}>
-              <FoodDetail />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/user/cart"
-          element={
-            <ProtectedRoute allowedRoles={["user"]}>
-              <Cart />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/user/checkout"
-          element={
-            <ProtectedRoute allowedRoles={["user"]}>
-              <Checkout />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/user/orders"
-          element={
-            <ProtectedRoute allowedRoles={["user"]}>
-              <UserOrders />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/user/home"
+            element={
+              <ProtectedRoute allowedRoles={["user"]}>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/food/:id"
+            element={
+              <ProtectedRoute allowedRoles={["user"]}>
+                <FoodDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/cart"
+            element={
+              <ProtectedRoute allowedRoles={["user"]}>
+                <Cart />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/checkout"
+            element={
+              <ProtectedRoute allowedRoles={["user"]}>
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/orders"
+            element={
+              <ProtectedRoute allowedRoles={["user"]}>
+                <UserOrders />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/menu"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminMenu />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/orders"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <AdminOrders />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/menu"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminMenu />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/orders"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminOrders />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/rider/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={["rider", "admin"]}>
-              <RiderDashboard />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/rider/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["rider", "admin"]}>
+                <RiderDashboard />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Suspense>
     </div>
   );
 }

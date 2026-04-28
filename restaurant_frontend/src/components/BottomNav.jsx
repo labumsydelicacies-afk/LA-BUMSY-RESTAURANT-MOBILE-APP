@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { NavLink } from "react-router-dom";
 import { useCartStore } from "../stores/cartStore";
 
@@ -10,9 +11,12 @@ const Icons = {
   Menu: () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
 };
 
-export default function BottomNav({ role = "user" }) {
+function BottomNav({ role = "user" }) {
   const cartItems = useCartStore((state) => state.items);
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const cartCount = useMemo(
+    () => cartItems.reduce((acc, item) => acc + item.quantity, 0),
+    [cartItems]
+  );
 
   const linksByRole = {
     user: [
@@ -33,7 +37,7 @@ export default function BottomNav({ role = "user" }) {
   const links = linksByRole[role] || linksByRole.user;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center pb-6 px-4 pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <nav className="flex w-full max-w-sm items-center justify-around rounded-[2rem] bg-white/90 p-2 shadow-[0_12px_40px_rgba(0,0,0,0.1)] backdrop-blur-xl border border-white pointer-events-auto">
         {links.map((link) => {
           const Icon = link.icon;
@@ -75,3 +79,5 @@ export default function BottomNav({ role = "user" }) {
     </div>
   );
 }
+
+export default memo(BottomNav);
