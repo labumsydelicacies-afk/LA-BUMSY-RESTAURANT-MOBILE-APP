@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brandRed: #E8220A;
+  --color-brandCream: #FFF8F0;
+  --color-brandYellow: #FFB800;
+
+  --font-heading: "Outfit", sans-serif;
+  --font-sans: "Inter", sans-serif;
+
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+}
+
+:root {
+  font-family: "Inter", sans-serif;
+  color: #1a1a1a;
+  background: var(--color-brandCream);
+}
+
+body {
+  margin: 0;
+  min-width: 360px;
+  background: var(--color-brandCream);
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(28,100%,74%,0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(189,100%,56%,0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(355,100%,93%,0.1) 0px, transparent 50%);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Custom Animations ─────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up {
+  animation: fadeUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Glass Background for Auth */
+.auth-food-bg::before,
+.auth-food-bg::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  opacity: 0.2;
+  pointer-events: none;
+  filter: blur(60px);
+  z-index: -1;
+  animation: float 10s infinite ease-in-out alternate;
+}
+
+.auth-food-bg::before {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle at 30% 30%, #ffb800 0%, #e8220a 70%);
+  top: -100px;
+  right: -100px;
+}
+
+.auth-food-bg::after {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle at 60% 40%, #e8220a 0%, #8f1406 75%);
+  bottom: -50px;
+  left: -80px;
+  animation-delay: -5s;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, 40px) scale(1.1); }
+}
