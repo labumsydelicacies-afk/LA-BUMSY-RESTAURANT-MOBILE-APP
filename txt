@@ -1,0 +1,16 @@
+url = postgresql://postgres:[YOUR-PASSWORD]@db.ygerbpzueciagggyddyi.supabase.co:5432/postgres
+
+
+
+host:
+db.ygerbpzueciagggyddyi.supabase.co
+
+port:
+5432
+
+database:
+postgres
+
+user:
+postgres
+
