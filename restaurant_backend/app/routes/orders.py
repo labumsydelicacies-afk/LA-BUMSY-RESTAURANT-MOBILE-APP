@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
-@router.post("/", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def place_order(
     order_data: OrderCreate,
     db: Session = Depends(get_db),
@@ -49,7 +49,7 @@ def place_order(
 
 
 
-@router.get("/", response_model=list[OrderResponse])
+@router.get("", response_model=list[OrderResponse])
 def get_orders(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),

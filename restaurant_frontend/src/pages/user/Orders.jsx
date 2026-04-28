@@ -17,7 +17,7 @@ export default function Orders() {
 
   const fetchOrders = async () => {
     try {
-      const { data } = await axiosInstance.get("/orders/");
+      const { data } = await axiosInstance.get("/orders");
       const normalized = Array.isArray(data) ? data : data.orders || [];
       const userId = Number(user?.id);
       // Support backend returning either list of orders or { orders: [...] } and mixed id types.

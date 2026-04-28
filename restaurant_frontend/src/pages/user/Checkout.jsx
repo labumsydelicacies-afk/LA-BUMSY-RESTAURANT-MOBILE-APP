@@ -22,7 +22,7 @@ export default function Checkout() {
       const payload = {
         items: items.map((item) => ({ food_id: item.id || item.food_id, quantity: item.quantity })),
       };
-      await axiosInstance.post("/orders/", payload);
+      await axiosInstance.post("/orders", payload);
       clearCart();
       navigate("/user/orders");
     } catch (err) {

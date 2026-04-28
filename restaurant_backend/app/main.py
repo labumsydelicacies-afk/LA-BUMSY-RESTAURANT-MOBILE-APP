@@ -25,6 +25,9 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Keep route matching strict and avoid implicit 307 slash redirects.
+app.router.redirect_slashes = False
+
 
 app.add_middleware(
     CORSMiddleware,

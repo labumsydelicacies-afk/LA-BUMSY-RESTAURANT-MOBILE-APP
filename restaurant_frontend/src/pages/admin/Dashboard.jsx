@@ -13,7 +13,7 @@ export default function Dashboard() {
 
   const fetchOrders = async () => {
     try {
-      const { data } = await axiosInstance.get("/orders/");
+      const { data } = await axiosInstance.get("/orders");
       setOrders(Array.isArray(data) ? data : data.orders || []);
       setError("");
     } catch (err) {

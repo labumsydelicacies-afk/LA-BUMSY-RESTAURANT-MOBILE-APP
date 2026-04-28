@@ -29,7 +29,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=list[FoodResponse])
+@router.get("", response_model=list[FoodResponse])
 def list_foods(
     skip: int = Query(0, ge=0, le=10_000),
     limit: int = Query(100, ge=1, le=100),
@@ -105,7 +105,7 @@ def get_food(food_id: int, db: Session = Depends(get_db)):
         ) from exc
 
 
-@router.post("/", response_model=FoodResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=FoodResponse, status_code=status.HTTP_201_CREATED)
 def create_food_item(
     food: FoodCreate,
     db: Session = Depends(get_db),

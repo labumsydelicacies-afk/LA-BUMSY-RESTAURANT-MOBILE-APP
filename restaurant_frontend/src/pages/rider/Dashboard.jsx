@@ -15,7 +15,7 @@ export default function Dashboard() {
 
   const fetchOrders = async () => {
     try {
-      const { data } = await axiosInstance.get("/orders/");
+      const { data } = await axiosInstance.get("/orders");
       const normalized = Array.isArray(data) ? data : data.orders || [];
       setOrders(
         normalized.filter((order) =>
