@@ -26,3 +26,6 @@ if raw_origins.strip():
     CORS_ALLOW_ORIGINS = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
 else:
     CORS_ALLOW_ORIGINS = ["http://localhost:3000"]
+
+# Optional regex for dynamic preview domains (e.g. Vercel previews).
+CORS_ALLOW_ORIGIN_REGEX = os.getenv("CORS_ALLOW_ORIGIN_REGEX", r"https://.*\.vercel\.app")
