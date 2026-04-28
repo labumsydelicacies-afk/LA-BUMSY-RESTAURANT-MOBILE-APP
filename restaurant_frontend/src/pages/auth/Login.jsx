@@ -39,8 +39,8 @@ export default function Login() {
   }, [isAuthenticated, role, navigate]);
 
   return (
-    <main className="auth-food-bg relative min-h-screen px-4 py-8">
-      <section className="rounded-3xl bg-white p-6 shadow-card">
+    <main className="auth-food-bg relative flex min-h-screen items-center justify-center px-4 py-8">
+      <section className="auth-card w-full max-w-md rounded-3xl bg-white/95 p-6 shadow-card sm:p-7">
         <div className="mb-8 rounded-2xl bg-brandRed p-5 text-white">
           <h1 className="font-heading text-3xl font-extrabold">La Bumsy Delicacies</h1>
           <p className="mt-2 text-sm text-white/90">Welcome back. Sign in to order your favorite meals.</p>
@@ -50,7 +50,7 @@ export default function Login() {
             <span className="mb-1 block text-xs font-semibold uppercase text-gray-500">Email</span>
             <input
               type="email"
-              className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-brandRed"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -60,7 +60,7 @@ export default function Login() {
             <span className="mb-1 block text-xs font-semibold uppercase text-gray-500">Password</span>
             <input
               type="password"
-              className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-brandRed"
+              className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -69,7 +69,7 @@ export default function Login() {
           {error ? <p className="text-sm text-brandRed">{error}</p> : null}
           <button
             type="submit"
-            className="w-full rounded-xl bg-brandRed py-3 font-semibold text-white disabled:opacity-70"
+            className="w-full rounded-xl bg-brandRed py-3 font-semibold text-white transition hover:bg-red-700 disabled:opacity-70"
             disabled={loading}
           >
             {loading ? (
