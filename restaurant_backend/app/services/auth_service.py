@@ -9,7 +9,13 @@ import logging
 from sqlalchemy.orm import Session
 
 from app.services.user_service import get_user_by_email
-from app.utils.security import UserRole, create_access_token, verify_password
+from app.utils.security import (
+    UserRole,
+    create_access_token,
+    hash_password,
+    needs_password_rehash,
+    verify_password,
+)
 
 
 # ------------------- Logger Setup ------------------- #
@@ -74,6 +80,12 @@ def login_user(db: Session, email: str, password: str) -> dict | None:
     if not user:
         logger.warning(f"Login failed for : {email}")
         return None
+
+    if needs_password_rehash(user.hashed_password):
+        user.hashed_password = hash_password(password)
+        db.commit()
+        db.refresh(user)
+        logger.info(f"Password hash upgraded for user : {email}")
 
     role = UserRole.ADMIN if user.is_admin else UserRole.CUSTOMER
 

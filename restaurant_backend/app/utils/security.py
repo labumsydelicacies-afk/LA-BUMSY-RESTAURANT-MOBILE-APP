@@ -30,17 +30,25 @@ TOKEN_EXPIRY_MINUTES = {
 
 
 #------------------- Password Hashing Setup -------------------#
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["argon2", "bcrypt"],
+    deprecated="auto",
+)
 
 
 def hash_password(password: str) -> str:
-    """Hashes a plain text password using bcrypt."""
+    """Hashes a plain text password using the preferred scheme (argon2)."""
     return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies a plain text password against a hashed password."""
     return pwd_context.verify(plain_password, hashed_password)
+
+
+def needs_password_rehash(hashed_password: str) -> bool:
+    """Returns True when hash should be upgraded to preferred scheme/settings."""
+    return pwd_context.needs_update(hashed_password)
 
 
 #------------------- Token Creation -------------------#

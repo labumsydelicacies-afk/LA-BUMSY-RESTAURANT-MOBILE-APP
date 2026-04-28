@@ -2,6 +2,7 @@ fastapi
 uvicorn
 sqlalchemy
 alembic
+argon2-cffi
 pydantic
 email-validator
 python-dotenv
