@@ -5,6 +5,7 @@ import { useAuthStore } from "../../stores/authStore";
 export default function Register() {
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
+  const verifyOtp = useAuthStore((state) => state.verifyOtp);
   const [form, setForm] = useState({ email: "", password: "", nickname: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,10 +19,16 @@ export default function Register() {
     try {
       setLoading(true);
       setError("");
-      await register(form);
+      const createdUser = await register(form);
+      const otp = window.prompt("Enter the OTP sent to your email to verify your account.");
+      if (!otp) {
+        setError("OTP verification is required before login.");
+        return;
+      }
+      await verifyOtp(createdUser.id, otp.trim());
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.detail || "Registration failed");
+      setError(err.response?.data?.detail || "Registration or OTP verification failed");
     } finally {
       setLoading(false);
     }
