@@ -93,7 +93,7 @@ export default function Login() {
   };
 
   return (
-    <main className="auth-food-bg relative flex min-h-screen items-center justify-center px-4 py-8">
+    <main className="auth-food-bg relative flex min-h-screen items-start justify-center px-4 py-8 sm:items-center">
       <section className="auth-card w-full max-w-md rounded-3xl bg-white/95 p-6 shadow-card sm:p-7">
         <div className="mb-8 rounded-2xl bg-brandRed p-5 text-white">
           <h1 className="font-heading text-3xl font-extrabold">La Bumsy Delicacies</h1>
@@ -136,8 +136,10 @@ export default function Login() {
                 Forgot password?
               </button>
             </div>
-            {error ? <p className="text-sm text-brandRed">{error}</p> : null}
-            {forgotMessage ? <p className="text-sm text-green-700">{forgotMessage}</p> : null}
+            <div className="min-h-5">
+              {error ? <p className="text-sm text-brandRed">{error}</p> : null}
+              {!error && forgotMessage ? <p className="text-sm text-green-700">{forgotMessage}</p> : null}
+            </div>
             <button
               type="submit"
               className="w-full rounded-xl bg-brandRed py-3 font-semibold text-white transition hover:bg-red-700 disabled:opacity-70"
@@ -163,8 +165,10 @@ export default function Login() {
                 required
               />
             </label>
-            {error ? <p className="text-sm text-brandRed">{error}</p> : null}
-            {forgotMessage ? <p className="text-sm text-green-700">{forgotMessage}</p> : null}
+            <div className="min-h-5">
+              {error ? <p className="text-sm text-brandRed">{error}</p> : null}
+              {!error && forgotMessage ? <p className="text-sm text-green-700">{forgotMessage}</p> : null}
+            </div>
             <button
               type="submit"
               className="w-full rounded-xl bg-brandRed py-3 font-semibold text-white transition hover:bg-red-700 disabled:opacity-70"
@@ -193,6 +197,8 @@ export default function Login() {
                 className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value)}
+                inputMode="numeric"
+                autoComplete="one-time-code"
                 required
               />
             </label>
@@ -216,8 +222,10 @@ export default function Login() {
                 required
               />
             </label>
-            {error ? <p className="text-sm text-brandRed">{error}</p> : null}
-            {forgotMessage ? <p className="text-sm text-green-700">{forgotMessage}</p> : null}
+            <div className="min-h-5">
+              {error ? <p className="text-sm text-brandRed">{error}</p> : null}
+              {!error && forgotMessage ? <p className="text-sm text-green-700">{forgotMessage}</p> : null}
+            </div>
             <button
               type="submit"
               className="w-full rounded-xl bg-brandRed py-3 font-semibold text-white transition hover:bg-red-700 disabled:opacity-70"
