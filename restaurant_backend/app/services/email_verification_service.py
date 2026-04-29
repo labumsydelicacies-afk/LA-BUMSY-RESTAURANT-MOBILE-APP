@@ -3,6 +3,7 @@
 #==============================#
 
 import hashlib
+import logging
 import random
 import smtplib
 from datetime import datetime, timedelta
@@ -12,6 +13,8 @@ from sqlalchemy.orm import Session
 
 from app.config import SMTP_EMAIL, SMTP_HOST, SMTP_PASSWORD, SMTP_PORT
 from app.db.models import EmailVerification, User
+
+logger = logging.getLogger(__name__)
 
 
 OTP_EXPIRY_MINUTES = 10
@@ -59,6 +62,10 @@ def create_otp(session: Session, user_id: int) -> str:
 
 
 def send_email(to_email: str, subject: str, body: str) -> None:
+    logger.info(f"SMTP_EMAIL type: {type(SMTP_EMAIL)}, value: {repr(SMTP_EMAIL)}")
+    logger.info(f"SMTP_PASSWORD exists: {SMTP_PASSWORD is not None}, length: {len(SMTP_PASSWORD) if SMTP_PASSWORD else 0}")
+    logger.info(f"SMTP_HOST: {repr(SMTP_HOST)}, SMTP_PORT: {SMTP_PORT}")
+
     if not SMTP_EMAIL or not SMTP_PASSWORD:
         raise ValueError("SMTP_EMAIL and SMTP_PASSWORD must be set")
 
