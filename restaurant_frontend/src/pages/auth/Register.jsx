@@ -92,7 +92,7 @@ export default function Register() {
   };
 
   return (
-    <main className="auth-food-bg relative flex min-h-screen items-center justify-center px-4 py-8">
+    <main className="auth-food-bg relative flex min-h-[100dvh] items-start justify-center overflow-y-auto px-4 py-8 sm:min-h-screen sm:items-center">
       <section className="auth-card w-full max-w-md rounded-3xl bg-white/95 p-6 shadow-card sm:p-7">
         <h1 className="font-heading text-2xl font-bold">Create account</h1>
         <p className="mt-2 text-sm text-gray-600">
@@ -117,7 +117,7 @@ export default function Register() {
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
-                    className="h-12 w-11 rounded-xl border border-gray-200 text-center text-lg font-semibold outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20 sm:h-14 sm:w-12"
+                    className="h-12 w-11 box-border rounded-xl border border-gray-200 text-center text-lg font-semibold outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20 sm:h-14 sm:w-12"
                     value={otp[index] || ""}
                     onChange={(event) => handleOtpInput(index, event.target.value)}
                     onKeyDown={(event) => handleOtpKeyDown(index, event)}
@@ -141,7 +141,7 @@ export default function Register() {
             <input
               name="nickname"
               placeholder="Nickname"
-              className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
+              className="w-full box-border text-left rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
               value={form.nickname}
               onChange={handleChange}
               required
@@ -150,7 +150,7 @@ export default function Register() {
               name="email"
               type="email"
               placeholder="Email"
-              className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
+              className="w-full box-border text-left rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
               value={form.email}
               onChange={handleChange}
               required
@@ -159,7 +159,7 @@ export default function Register() {
               name="password"
               type="password"
               placeholder="Password"
-              className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
+              className="w-full box-border text-left rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
               value={form.password}
               onChange={handleChange}
               required

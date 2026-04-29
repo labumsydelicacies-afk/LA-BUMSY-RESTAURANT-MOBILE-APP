@@ -105,7 +105,7 @@ export default function Login() {
               <span className="mb-1 block text-xs font-semibold uppercase text-gray-500">Email</span>
               <input
                 type="email"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
+                className="w-full box-border text-left rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -115,7 +115,7 @@ export default function Login() {
               <span className="mb-1 block text-xs font-semibold uppercase text-gray-500">Password</span>
               <input
                 type="password"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
+                className="w-full box-border text-left rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -159,7 +159,7 @@ export default function Login() {
               <span className="mb-1 block text-xs font-semibold uppercase text-gray-500">Email</span>
               <input
                 type="email"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
+                className="w-full box-border text-left rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
                 value={forgotEmail}
                 onChange={(e) => setForgotEmail(e.target.value)}
                 required
@@ -194,7 +194,7 @@ export default function Login() {
               <span className="mb-1 block text-xs font-semibold uppercase text-gray-500">Reset code</span>
               <input
                 type="text"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
+                className="w-full box-border text-left rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value)}
                 inputMode="numeric"
@@ -206,7 +206,7 @@ export default function Login() {
               <span className="mb-1 block text-xs font-semibold uppercase text-gray-500">New password</span>
               <input
                 type="password"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
+                className="w-full box-border text-left rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
@@ -216,7 +216,7 @@ export default function Login() {
               <span className="mb-1 block text-xs font-semibold uppercase text-gray-500">Confirm password</span>
               <input
                 type="password"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
+                className="w-full box-border text-left rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
