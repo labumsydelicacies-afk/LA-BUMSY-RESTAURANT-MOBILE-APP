@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
 
 export default function Register() {
+  const OTP_LENGTH = 6;
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
   const verifyOtp = useAuthStore((state) => state.verifyOtp);
@@ -57,6 +58,39 @@ export default function Register() {
     }
   };
 
+  const handleOtpInput = (index, value) => {
+    const cleanedValue = value.replace(/\D/g, "").slice(-1);
+    const otpChars = otp.split("");
+    otpChars[index] = cleanedValue;
+    const nextOtp = otpChars.join("").slice(0, OTP_LENGTH);
+    setOtp(nextOtp);
+
+    if (cleanedValue && index < OTP_LENGTH - 1) {
+      const nextBox = document.getElementById(`otp-box-${index + 1}`);
+      nextBox?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index, event) => {
+    if (event.key === "Backspace" && !otp[index] && index > 0) {
+      const prevBox = document.getElementById(`otp-box-${index - 1}`);
+      prevBox?.focus();
+    }
+  };
+
+  const handleOtpPaste = (event) => {
+    const pastedOtp = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
+    if (!pastedOtp) {
+      return;
+    }
+
+    event.preventDefault();
+    setOtp(pastedOtp);
+    const focusIndex = Math.min(pastedOtp.length, OTP_LENGTH - 1);
+    const focusBox = document.getElementById(`otp-box-${focusIndex}`);
+    focusBox?.focus();
+  };
+
   return (
     <main className="auth-food-bg relative flex min-h-screen items-center justify-center px-4 py-8">
       <section className="auth-card w-full max-w-md rounded-3xl bg-white/95 p-6 shadow-card sm:p-7">
@@ -73,14 +107,25 @@ export default function Register() {
         ) : null}
         {createdUser ? (
           <form className="mt-6 space-y-4" onSubmit={handleVerifyOtp}>
-            <input
-              name="otp"
-              placeholder="Enter verification code"
-              className="w-full rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
-              value={otp}
-              onChange={(event) => setOtp(event.target.value)}
-              required
-            />
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600">Enter the 6-digit verification code</p>
+              <div className="flex items-center justify-between gap-2 sm:gap-3" onPaste={handleOtpPaste}>
+                {Array.from({ length: OTP_LENGTH }).map((_, index) => (
+                  <input
+                    key={index}
+                    id={`otp-box-${index}`}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    className="h-12 w-11 rounded-xl border border-gray-200 text-center text-lg font-semibold outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20 sm:h-14 sm:w-12"
+                    value={otp[index] || ""}
+                    onChange={(event) => handleOtpInput(index, event.target.value)}
+                    onKeyDown={(event) => handleOtpKeyDown(index, event)}
+                    required
+                  />
+                ))}
+              </div>
+            </div>
             {error ? <p className="text-sm text-brandRed">{error}</p> : null}
             <button className="w-full rounded-xl bg-brandRed py-3 font-semibold text-white transition hover:bg-red-700 disabled:opacity-70" disabled={loading}>
               {loading ? (
