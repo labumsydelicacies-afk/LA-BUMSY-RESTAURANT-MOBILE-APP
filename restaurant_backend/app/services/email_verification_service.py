@@ -6,7 +6,7 @@ import hashlib
 import random
 import smtplib
 from datetime import datetime, timedelta
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 
 from sqlalchemy.orm import Session
 
@@ -62,10 +62,13 @@ def send_email(to_email: str, subject: str, body: str) -> None:
     if not SMTP_EMAIL or not SMTP_PASSWORD:
         raise ValueError("SMTP_EMAIL and SMTP_PASSWORD must be set")
 
-    msg = MIMEText(body)
-    msg["Subject"] = subject
+    normalized_subject = subject.strip() or "Email verification"
+
+    msg = EmailMessage()
+    msg["Subject"] = normalized_subject
     msg["From"] = SMTP_EMAIL
     msg["To"] = to_email
+    msg.set_content(body)
 
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
         server.login(SMTP_EMAIL, SMTP_PASSWORD)
