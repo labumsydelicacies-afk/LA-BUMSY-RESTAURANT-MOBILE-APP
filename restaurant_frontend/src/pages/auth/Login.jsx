@@ -93,7 +93,7 @@ export default function Login() {
   };
 
   return (
-    <main className="auth-food-bg relative flex min-h-screen items-start justify-center px-4 py-8 sm:items-center">
+    <main className="auth-food-bg relative flex min-h-[100dvh] items-start justify-center overflow-y-auto px-4 py-8 sm:min-h-screen sm:items-center">
       <section className="auth-card w-full max-w-md rounded-3xl bg-white/95 p-6 shadow-card sm:p-7">
         <div className="mb-8 rounded-2xl bg-brandRed p-5 text-white">
           <h1 className="font-heading text-3xl font-extrabold">La Bumsy Delicacies</h1>
