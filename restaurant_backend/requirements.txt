@@ -8,5 +8,5 @@ email-validator
 python-dotenv
 python-jose
 passlib
-bcrypt
+bcrypt==4.0.1
 psycopg2-binary
