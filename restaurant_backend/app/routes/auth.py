@@ -43,12 +43,19 @@ def register(
     """
     try:
         user = create_user(db, user_data)
+        logger.info("User creation succeeded for email=%s", user.email)
         otp = create_otp(db, user.id)
-        background_tasks.add_task(send_verification_email_async, user.email, otp)
+        email_queued = True
+        try:
+            background_tasks.add_task(send_verification_email_async, user.email, otp)
+            logger.info("Verification email task queued for email=%s", user.email)
+        except Exception:
+            email_queued = False
+            logger.exception("Failed to queue verification email task for email=%s", user.email)
         return {
             "success": True,
             "message": "User created. Email sending in progress.",
-            "email_queued": True,
+            "email_queued": email_queued,
             "user": user,
         }
     except ValueError as exc:

@@ -46,6 +46,12 @@ def create_otp(session: Session, user_id: int) -> str:
     otp = generate_otp()
     otp_hash = hash_otp(otp)
 
+    # Invalidate any previously unused OTPs so only the latest one is valid.
+    session.query(EmailVerification).filter(
+        EmailVerification.user_id == user_id,
+        EmailVerification.is_used.is_(False),
+    ).update({EmailVerification.is_used: True}, synchronize_session=False)
+
     record = EmailVerification(
         user_id=user_id,
         code_hash=otp_hash,
@@ -57,6 +63,7 @@ def create_otp(session: Session, user_id: int) -> str:
     session.add(record)
     session.commit()
     session.refresh(record)
+    logger.info("OTP created for user_id=%s", user_id)
 
     return otp
 
@@ -98,6 +105,7 @@ def send_verification_email_async(to_email: str, otp: str) -> None:
             subject="Your verification code",
             body=f"Your verification code is {otp}. It expires in {OTP_EXPIRY_MINUTES} minutes.",
         )
+        logger.info("Verification email sent successfully to %s", to_email)
     except Exception:
         logger.exception("Failed to send verification email to %s", to_email)
 

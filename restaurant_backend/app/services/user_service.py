@@ -6,7 +6,7 @@
 
 import logging
 
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.db.models import User
@@ -61,6 +61,9 @@ def create_user(db: Session, user_data: UserCreate) -> User:
     existing_user = get_user_by_email(db, user_data.email)
     if existing_user:
         raise ValueError(f"User with email {user_data.email} already exists")
+    existing_nickname = db.query(User).filter(User.nickname == user_data.nickname).first()
+    if existing_nickname:
+        raise ValueError(f"User with nickname {user_data.nickname} already exists")
 
     try:
         hashed_password = hash_password(user_data.password)
@@ -76,6 +79,15 @@ def create_user(db: Session, user_data: UserCreate) -> User:
         db.refresh(new_user)
         logger.info(f"New user created successfully: {new_user.email}")
         return new_user
+    except IntegrityError as e:
+        db.rollback()
+        # Covers race conditions on unique constraints (email/nickname).
+        error_text = str(getattr(e, "orig", e)).lower()
+        if "email" in error_text:
+            raise ValueError(f"User with email {user_data.email} already exists") from e
+        if "nickname" in error_text:
+            raise ValueError(f"User with nickname {user_data.nickname} already exists") from e
+        raise ValueError("User already exists") from e
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Database error while creating user: {e}")
