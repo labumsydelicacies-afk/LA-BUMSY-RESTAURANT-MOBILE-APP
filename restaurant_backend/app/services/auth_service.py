@@ -53,6 +53,10 @@ def authenticate_user(db: Session, email: str, password: str):
         logger.warning(f"Authentication failed - email not found: {email}")
         return None
 
+    if not user.is_verified:
+        logger.warning(f"Authentication failed - user not verified: {email}")
+        return None
+
     if not verify_password(password, user.hashed_password):
         logger.warning(f"Authentication failed - wrong password for: {email}")
         return None

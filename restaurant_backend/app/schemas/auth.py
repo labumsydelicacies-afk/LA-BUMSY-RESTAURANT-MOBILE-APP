@@ -19,3 +19,8 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     role: str
     nickname: str
+
+
+class VerifyOtpRequest(BaseModel):
+    user_id: int
+    otp: str

@@ -23,6 +23,7 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: int
     is_admin: bool
+    is_verified: bool
     created_at: datetime
     nickname: str
     class Config:

@@ -8,11 +8,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.schemas.auth import LoginRequest, TokenResponse
+from app.schemas.auth import LoginRequest, TokenResponse, VerifyOtpRequest
 from app.schemas.user import UserCreate, UserResponse
 from app.services.auth_service import login_user
+from app.services.email_verification_service import (
+    send_verification_email,
+    verify_otp_for_user,
+)
 from app.services.user_service import create_user
-
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +32,9 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     Register a new user.
     """
     try:
-        return create_user(db, user_data)
+        user = create_user(db, user_data)
+        send_verification_email(db, user)
+        return user
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -75,3 +80,15 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Login failed",
         ) from exc
+
+
+
+@router.post("/verify-otp")
+def verify_otp(payload: VerifyOtpRequest, session: Session = Depends(get_db)):
+    verified = verify_otp_for_user(session, payload.user_id, payload.otp)
+    if not verified:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired OTP",
+        )
+    return {"message": "Email verified successfully"}

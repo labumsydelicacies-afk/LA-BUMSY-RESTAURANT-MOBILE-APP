@@ -24,10 +24,15 @@ class User(Base):
     nickname: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
 
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
     orders = relationship("Order", back_populates="user")
-
+    email_verifications = relationship(
+        "EmailVerification",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
 
 
 
@@ -45,8 +50,8 @@ class Food(Base):
     image_url: Mapped[str | None] = mapped_column(String, nullable=True)
 
     is_available: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     order_items = relationship("OrderItem", back_populates="food")
 
@@ -59,16 +64,15 @@ class Order(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     status: Mapped[str] = mapped_column(String, default="pending")
-    
     total_price: Mapped[float] = mapped_column(Float, default=0)
-
     address: Mapped[str | None] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
     user = relationship("User", back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete")
+
 
 
 
@@ -78,11 +82,29 @@ class OrderItem(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id"))
-    food_id: Mapped[int] = mapped_column(ForeignKey("foods.id"))
+    order_id: Mapped[int] = mapped_column(Integer, ForeignKey("orders.id"), nullable=False)
+    food_id: Mapped[int] = mapped_column(Integer, ForeignKey("foods.id"), nullable=False)
 
     quantity: Mapped[int] = mapped_column(Integer, default=1)
-    price: Mapped[float] = mapped_column(Float)
+    price: Mapped[float] = mapped_column(Float, nullable=False)
 
     order = relationship("Order", back_populates="items")
     food = relationship("Food", back_populates="order_items")
+
+
+
+
+#----- EMAIL VERIFICATION MODEL  -----#
+class EmailVerification(Base):
+    __tablename__ = "email_verification"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+
+    code_hash: Mapped[str] = mapped_column(String, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+    is_used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
+
+    user = relationship("User", back_populates="email_verifications")
