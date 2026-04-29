@@ -3,6 +3,7 @@
 #==============================#
 
 import hashlib
+import logging
 import random
 import smtplib
 from datetime import datetime, timedelta
@@ -12,6 +13,8 @@ from sqlalchemy.orm import Session
 
 from app.config import SMTP_EMAIL, SMTP_HOST, SMTP_PASSWORD, SMTP_PORT
 from app.db.models import EmailVerification, User
+
+logger = logging.getLogger(__name__)
 
 
 OTP_EXPIRY_MINUTES = 10
@@ -82,6 +85,21 @@ def send_verification_email(session: Session, user: User) -> None:
         subject="Your verification code",
         body=f"Your verification code is {otp}. It expires in {OTP_EXPIRY_MINUTES} minutes.",
     )
+
+
+def send_verification_email_async(to_email: str, otp: str) -> None:
+    """
+    Send OTP email outside request lifecycle.
+    SMTP failures are logged but should not invalidate registration.
+    """
+    try:
+        send_email(
+            to_email=to_email,
+            subject="Your verification code",
+            body=f"Your verification code is {otp}. It expires in {OTP_EXPIRY_MINUTES} minutes.",
+        )
+    except Exception:
+        logger.exception("Failed to send verification email to %s", to_email)
 
 
 def verify_otp_for_user(session: Session, user_id: int, otp: str) -> bool:

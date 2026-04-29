@@ -4,15 +4,21 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.schemas.auth import LoginRequest, TokenResponse, VerifyOtpRequest
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.auth import (
+    LoginRequest,
+    RegisterResponse,
+    TokenResponse,
+    VerifyOtpRequest,
+)
+from app.schemas.user import UserCreate
 from app.services.auth_service import login_user
 from app.services.email_verification_service import (
-    send_verification_email,
+    create_otp,
+    send_verification_email_async,
     verify_otp_for_user,
 )
 from app.services.user_service import create_user
@@ -24,17 +30,27 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post(
     "/register",
-    response_model=UserResponse,
+    response_model=RegisterResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def register(user_data: UserCreate, db: Session = Depends(get_db)):
+def register(
+    user_data: UserCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     """
     Register a new user.
     """
     try:
         user = create_user(db, user_data)
-        send_verification_email(db, user)
-        return user
+        otp = create_otp(db, user.id)
+        background_tasks.add_task(send_verification_email_async, user.email, otp)
+        return {
+            "success": True,
+            "message": "User created. Email sending in progress.",
+            "email_queued": True,
+            "user": user,
+        }
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

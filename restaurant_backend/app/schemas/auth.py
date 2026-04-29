@@ -6,6 +6,8 @@
 
 from pydantic import BaseModel, EmailStr
 
+from app.schemas.user import UserResponse
+
 
 
 
@@ -24,3 +26,10 @@ class TokenResponse(BaseModel):
 class VerifyOtpRequest(BaseModel):
     user_id: int
     otp: str
+
+
+class RegisterResponse(BaseModel):
+    success: bool
+    message: str
+    email_queued: bool
+    user: UserResponse

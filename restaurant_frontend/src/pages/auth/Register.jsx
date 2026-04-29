@@ -25,7 +25,7 @@ export default function Register() {
       setSuccessMessage("");
       const user = await register(form);
       setCreatedUser(user);
-      setSuccessMessage(`Account created for ${user.email}. Enter the verification code sent to your email to finish setup.`);
+      setSuccessMessage(`Account created for ${user.email}. Email delivery is in progress. Enter the verification code when it arrives to complete authentication.`);
     } catch (err) {
       setError(err.response?.data?.detail || "Registration failed");
     } finally {

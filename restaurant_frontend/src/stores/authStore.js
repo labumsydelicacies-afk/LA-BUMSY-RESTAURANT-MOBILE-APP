@@ -63,7 +63,7 @@ export const useAuthStore = create((set, get) => ({
 
   register: async (payload) => {
     const { data } = await axiosInstance.post("/auth/register", payload);
-    return data;
+    return data.user ?? data;
   },
 
   verifyOtp: async (userId, otp) => {
