@@ -27,7 +27,9 @@ axiosInstance.interceptors.response.use(
     const isAuthRequest =
       requestUrl.includes("/auth/login") ||
       requestUrl.includes("/auth/register") ||
-      requestUrl.includes("/auth/verify-otp");
+      requestUrl.includes("/auth/verify-otp") ||
+      requestUrl.includes("/auth/forgot-password") ||
+      requestUrl.includes("/auth/reset-password");
 
     if (status === 401) {
       localStorage.removeItem("token");

@@ -70,6 +70,19 @@ export const useAuthStore = create((set, get) => ({
     await axiosInstance.post("/auth/verify-otp", { user_id: userId, otp });
   },
 
+  forgotPassword: async (email) => {
+    const { data } = await axiosInstance.post("/auth/forgot-password", { email });
+    return data;
+  },
+
+  resetPassword: async ({ email, user_id, otp_code, new_password }) => {
+    const payload = { otp_code, new_password };
+    if (email) payload.email = email;
+    if (user_id) payload.user_id = user_id;
+    const { data } = await axiosInstance.post("/auth/reset-password", payload);
+    return data;
+  },
+
   logout: () => {
     localStorage.removeItem("token");
     set({ token: null, user: null, role: null, isAuthenticated: false });

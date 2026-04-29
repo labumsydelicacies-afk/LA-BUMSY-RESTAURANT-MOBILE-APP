@@ -9,19 +9,24 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.schemas.auth import (
+    ForgotPasswordRequest,
     LoginRequest,
     RegisterResponse,
+    ResetPasswordRequest,
     TokenResponse,
     VerifyOtpRequest,
 )
 from app.schemas.user import UserCreate
 from app.services.auth_service import login_user
 from app.services.email_verification_service import (
+    consume_otp_for_user,
     create_otp,
     send_verification_email_async,
     verify_otp_for_user,
 )
+from app.services.user_service import get_user_by_email, get_user_by_id
 from app.services.user_service import create_user
+from app.utils.security import hash_password
 
 logger = logging.getLogger(__name__)
 
@@ -115,3 +120,70 @@ def verify_otp(payload: VerifyOtpRequest, session: Session = Depends(get_db)):
             detail="Invalid or expired OTP",
         )
     return {"message": "Email verified successfully"}
+
+
+@router.post("/forgot-password")
+def forgot_password(
+    payload: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    user = get_user_by_email(db, payload.email)
+    if user:
+        otp = create_otp(db, user.id)
+        try:
+            background_tasks.add_task(
+                send_verification_email_async,
+                user.email,
+                otp,
+                subject="Your password reset code",
+                purpose="password reset",
+            )
+        except Exception:
+            logger.exception("Failed to queue password reset email for email=%s", user.email)
+
+    return {
+        "success": True,
+        "message": "If an account exists, a reset code has been sent",
+    }
+
+
+@router.post("/reset-password")
+def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    if not payload.email and payload.user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email or user_id is required",
+        )
+
+    user = None
+    if payload.user_id is not None:
+        user = get_user_by_id(db, payload.user_id)
+    if user is None and payload.email:
+        user = get_user_by_email(db, payload.email)
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired OTP",
+        )
+
+    if not consume_otp_for_user(db, user.id, payload.otp_code):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired OTP",
+        )
+
+    if len(payload.new_password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters",
+        )
+
+    user.hashed_password = hash_password(payload.new_password)
+    db.commit()
+
+    return {
+        "success": True,
+        "message": "Password reset successful",
+    }

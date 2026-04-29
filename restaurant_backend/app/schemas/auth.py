@@ -33,3 +33,14 @@ class RegisterResponse(BaseModel):
     message: str
     email_queued: bool
     user: UserResponse
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr | None = None
+    user_id: int | None = None
+    otp_code: str
+    new_password: str

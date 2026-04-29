@@ -103,14 +103,19 @@ def send_verification_email(session: Session, user: User) -> None:
     )
 
 
-def send_verification_email_async(to_email: str, otp: str) -> None:
+def send_verification_email_async(
+    to_email: str,
+    otp: str,
+    *,
+    subject: str = "Your verification code",
+    purpose: str = "verification",
+) -> None:
     """
     Send OTP email outside request lifecycle.
     SMTP failures are logged but should not invalidate registration.
     """
     # Precompute static content before opening the SMTP connection.
-    subject = "Your verification code"
-    body = f"Your verification code is {otp}. It expires in {OTP_EXPIRY_MINUTES} minutes."
+    body = f"Your {purpose} code is {otp}. It expires in {OTP_EXPIRY_MINUTES} minutes."
 
     if not SMTP_EMAIL or not SMTP_PASSWORD:
         logger.error("Verification email skipped for %s: SMTP credentials are missing", to_email)
@@ -159,7 +164,7 @@ def send_verification_email_async(to_email: str, otp: str) -> None:
         logger.exception("Failed to send verification email to %s after %.3fs", to_email, total)
 
 
-def verify_otp_for_user(session: Session, user_id: int, otp: str) -> bool:
+def consume_otp_for_user(session: Session, user_id: int, otp: str) -> bool:
     record = get_latest_unused_otp(session, user_id)
     if not record:
         return False
@@ -175,6 +180,17 @@ def verify_otp_for_user(session: Session, user_id: int, otp: str) -> bool:
         return False
 
     record.is_used = True
+    return True
+
+
+def verify_otp_for_user(session: Session, user_id: int, otp: str) -> bool:
+    if not consume_otp_for_user(session, user_id, otp):
+        return False
+
+    user = session.query(User).filter(User.id == user_id).first()
+    if user is None:
+        return False
+
     user.is_verified = True
     session.commit()
     return True
