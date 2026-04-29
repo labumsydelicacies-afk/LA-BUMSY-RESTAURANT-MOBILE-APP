@@ -4,16 +4,21 @@ FastAPI backend for the restaurant app, prepared for Railway deployment.
 
 ## Local Run
 
-1. Create and activate a virtual environment.
-2. Install dependencies:
-   - `pip install -r requirements.txt`
-3. Set environment variables in `.env`:
+Run all backend Python commands from the `restaurant_backend` folder.
+
+1. Install dependencies:
+   - `uv sync`
+2. Set environment variables in `.env`:
    - `DATABASE_URL`
    - `SECRET_KEY`
    - `ALGORITHM` (optional, defaults to `HS256`)
    - `CORS_ALLOW_ORIGINS` (optional, comma-separated origins)
-4. Start server:
-   - `uvicorn app.main:app --reload`
+3. Start server:
+   - `uv run uvicorn app.main:app --reload`
+4. Run migrations:
+   - `uv run alembic -c app/db/migrations/alembic.ini upgrade head`
+
+`uv` will manage the backend virtual environment in `restaurant_backend/.venv`. Do not run `uv sync` from the repository root.
 
 ## Railway Deployment
 
