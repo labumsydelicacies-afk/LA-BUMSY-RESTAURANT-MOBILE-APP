@@ -46,7 +46,12 @@ export default function Register() {
       await verifyOtp(createdUser.id, otp.trim());
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.detail || "OTP verification failed");
+      const apiMessage = err.response?.data?.detail;
+      setError(
+        apiMessage
+          ? `${apiMessage}. Your account is created but not authenticated until OTP verification succeeds.`
+          : "OTP verification failed. Your account is created but not authenticated until OTP verification succeeds."
+      );
     } finally {
       setLoading(false);
     }
