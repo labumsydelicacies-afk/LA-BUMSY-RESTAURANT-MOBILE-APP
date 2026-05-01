@@ -25,7 +25,7 @@ export default function OrderCard({ order, children }) {
   const orderIdLabel = order?.id ? String(order.id).slice(-6) : "N/A";
 
   return (
-    <article className="rounded-3xl bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] border border-gray-100 relative overflow-hidden">
+    <article className="rounded-3xl bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] border border-gray-100 relative overflow-hidden scale-in">
       {/* Decorative side accent based on status */}
       <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${statusStyle.split(' ')[0].replace('100', '400')}`} />
       

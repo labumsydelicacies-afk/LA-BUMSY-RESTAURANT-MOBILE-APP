@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Link } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 import { useCartStore } from "../stores/cartStore";
@@ -12,9 +12,17 @@ function resolveImageUrl(imageUrl) {
 
 function FoodCard({ food }) {
   const addToCart = useCartStore((state) => state.addToCart);
+  const [justAdded, setJustAdded] = useState(false);
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    addToCart(food, 1);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 650);
+  };
 
   return (
-    <article className="group relative flex flex-col justify-between overflow-hidden rounded-[24px] bg-white p-3 shadow-[0_8px_24px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(232,34,10,0.08)] border border-gray-100">
+    <article className="group relative flex flex-col justify-between overflow-hidden rounded-[24px] bg-white p-3 shadow-[0_8px_24px_rgba(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(232,34,10,0.08)] border border-gray-100 slide-up">
       <Link to={`/user/food/${food.id}`} className="block relative overflow-hidden rounded-2xl h-40 w-full bg-brandCream">
         {food.image_url ? (
           <img
@@ -56,17 +64,28 @@ function FoodCard({ food }) {
           
           {food.is_available ? (
             <button
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-brandRed text-white shadow-[0_4px_12px_rgba(232,34,10,0.3)] transition-all duration-200 hover:scale-110 hover:bg-[#c41a07] active:scale-95"
-              onClick={(e) => {
-                e.preventDefault();
-                addToCart(food, 1);
-              }}
+              className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-[0_4px_12px_rgba(232,34,10,0.3)] transition-all duration-200 hover:scale-110 active:scale-90 ${
+                justAdded
+                  ? "bg-emerald-500 cart-pulse scale-110"
+                  : "bg-brandRed hover:bg-[#c41a07]"
+              }`}
+              onClick={handleAddToCart}
               aria-label="Add to cart"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              {justAdded ? (
+                /* checkmark */
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : (
+                /* plus */
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              )}
             </button>
           ) : (
-            <div className="h-10 w-10" /> /* Spacer */
+            <div className="h-10 w-10" />
           )}
         </div>
       </div>

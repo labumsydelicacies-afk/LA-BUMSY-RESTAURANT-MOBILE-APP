@@ -13,6 +13,7 @@ const UserOrders = lazy(() => import("./pages/user/Orders"));
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const AdminMenu = lazy(() => import("./pages/admin/Menu"));
 const AdminOrders = lazy(() => import("./pages/admin/Orders"));
+const AdminUsers = lazy(() => import("./pages/admin/Users"));
 const RiderDashboard = lazy(() => import("./pages/rider/Dashboard"));
 
 function Toast({ message, onClose }) {
@@ -122,6 +123,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminOrders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AdminUsers />
               </ProtectedRoute>
             }
           />

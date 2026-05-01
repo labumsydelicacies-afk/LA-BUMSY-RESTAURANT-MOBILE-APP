@@ -41,8 +41,12 @@ export default function Cart() {
           </div>
         ) : (
           <div className="space-y-4">
-            {items.map((item) => (
-              <article key={item.id} className="group relative flex items-center overflow-hidden rounded-3xl bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 transition-shadow hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)]">
+            {items.map((item, index) => (
+              <article
+                key={item.id}
+                className="group relative flex items-center overflow-hidden rounded-3xl bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 transition-shadow hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] slide-up"
+                style={{ animationDelay: `${index * 60}ms` }}
+              >
                 <div className="flex-1 min-w-0 pr-4">
                   <h3 className="font-heading text-[17px] font-bold text-gray-900 truncate">{item.name}</h3>
                   <p className="font-heading text-[15px] font-extrabold text-brandRed mt-1">

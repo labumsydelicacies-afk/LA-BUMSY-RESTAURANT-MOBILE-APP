@@ -61,21 +61,27 @@ export default function Orders() {
       <section className="space-y-3 px-4 pb-24 pt-2">
         {loading ? <p className="text-sm text-gray-500">Loading orders...</p> : null}
         {error ? <p className="text-sm text-brandRed">{error}</p> : null}
-        {orders.map((order) => (
-          <OrderCard key={order.id} order={order}>
-            <select
-              className="w-full rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
-              value={order.status}
-              onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
-              disabled={updatingStatus === order.id}
-            >
-              {statuses.map((status) => (
-                <option value={status} key={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </OrderCard>
+        {orders.map((order, index) => (
+          <div
+            key={order.id}
+            className="slide-up"
+            style={{ animationDelay: `${index * 55}ms` }}
+          >
+            <OrderCard order={order}>
+              <select
+                className="w-full rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
+                value={order.status}
+                onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
+                disabled={updatingStatus === order.id}
+              >
+                {statuses.map((status) => (
+                  <option value={status} key={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </OrderCard>
+          </div>
         ))}
       </section>
       <BottomNav role="admin" />

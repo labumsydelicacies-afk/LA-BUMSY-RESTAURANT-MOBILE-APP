@@ -8,6 +8,7 @@ export default function Register() {
   const register = useAuthStore((state) => state.register);
   const verifyOtp = useAuthStore((state) => state.verifyOtp);
   const resendOtp = useAuthStore((state) => state.resendOtp);
+  const [selectedRole, setSelectedRole] = useState("customer");
   const [form, setForm] = useState({ email: "", password: "", nickname: "" });
   const [createdUser, setCreatedUser] = useState(null);
   const [otp, setOtp] = useState("");
@@ -27,7 +28,7 @@ export default function Register() {
       setLoading(true);
       setError("");
       setSuccessMessage("");
-      const user = await register(form);
+      const user = await register({ ...form, role: selectedRole });
       setCreatedUser(user);
       setSuccessMessage(`Account created for ${user.email}. Email delivery is in progress. Enter the verification code when it arrives to complete authentication.`);
     } catch (err) {
@@ -180,6 +181,42 @@ export default function Register() {
           </form>
         ) : (
           <form className="mt-6 space-y-4" onSubmit={handleRegister}>
+            {/* ── Role Switcher ─────────────────────────────────────── */}
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase text-gray-400 tracking-wide">I want to sign up as</p>
+              <div className="relative flex rounded-2xl bg-gray-100 p-1">
+                {/* sliding pill */}
+                <div
+                  className="absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl bg-brandRed shadow-sm transition-all duration-300 ease-out"
+                  style={{ left: selectedRole === "customer" ? "4px" : "calc(50%)" }}
+                />
+                <button
+                  type="button"
+                  id="role-customer-btn"
+                  className={`relative z-10 flex-1 rounded-xl py-2 text-sm font-bold transition-colors duration-200 ${
+                    selectedRole === "customer" ? "text-white" : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  onClick={() => setSelectedRole("customer")}
+                >
+                  🍽️ Customer
+                </button>
+                <button
+                  type="button"
+                  id="role-rider-btn"
+                  className={`relative z-10 flex-1 rounded-xl py-2 text-sm font-bold transition-colors duration-200 ${
+                    selectedRole === "rider" ? "text-white" : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  onClick={() => setSelectedRole("rider")}
+                >
+                  🛵 Rider
+                </button>
+              </div>
+              <p className="mt-1.5 text-xs text-gray-400 text-center">
+                {selectedRole === "customer"
+                  ? "Order food and track your deliveries"
+                  : "Accept and deliver orders in your area"}
+              </p>
+            </div>
             <input
               name="nickname"
               placeholder="Nickname"
