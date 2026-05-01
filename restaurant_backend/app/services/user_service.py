@@ -72,6 +72,7 @@ def create_user(db: Session, user_data: UserCreate) -> User:
             hashed_password=hashed_password,
             nickname=user_data.nickname,
             is_admin=False,
+            is_rider=(user_data.role == "rider"),
             is_verified=False,
         )
         db.add(new_user)
