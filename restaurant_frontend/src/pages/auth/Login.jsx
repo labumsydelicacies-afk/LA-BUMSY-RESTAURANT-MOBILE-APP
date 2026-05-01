@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
 
@@ -13,6 +13,7 @@ export default function Login() {
   const login = useAuthStore((state) => state.login);
   const forgotPassword = useAuthStore((state) => state.forgotPassword);
   const resetPassword = useAuthStore((state) => state.resetPassword);
+  const resendOtp = useAuthStore((state) => state.resendOtp);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const role = useAuthStore((state) => state.role);
   const [email, setEmail] = useState("");
@@ -26,6 +27,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [forgotMessage, setForgotMessage] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const cooldownRef = useRef(null);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -46,6 +49,33 @@ export default function Login() {
       navigate(redirectByRole[role] || "/user/home");
     }
   }, [isAuthenticated, role, navigate]);
+
+  const startCooldown = (seconds = 30) => {
+    setResendCooldown(seconds);
+    clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleResendResetCode = async () => {
+    if (!forgotEmail || resendCooldown > 0) return;
+    try {
+      setError("");
+      await resendOtp(forgotEmail);
+      setForgotMessage("A new reset code has been sent to your email.");
+      startCooldown(30);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Could not resend code. Please try again.");
+    }
+  };
+
 
   const handleForgotPasswordRequest = async (event) => {
     event.preventDefault();
@@ -236,13 +266,10 @@ export default function Login() {
             <button
               type="button"
               className="w-full rounded-xl border border-gray-200 py-3 font-semibold text-gray-600 transition hover:bg-gray-50"
-              onClick={() => {
-                setForgotStep("request");
-                setError("");
-                setForgotMessage("");
-              }}
+              onClick={handleResendResetCode}
+              disabled={resendCooldown > 0}
             >
-              Resend code
+              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
             </button>
           </form>
         )}

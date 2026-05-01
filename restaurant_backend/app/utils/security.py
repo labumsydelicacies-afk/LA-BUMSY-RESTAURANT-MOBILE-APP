@@ -20,12 +20,14 @@ from app.config import ALGORITHM, SECRET_KEY
 class UserRole(str, Enum):
     CUSTOMER = "customer"
     ADMIN = "admin"
+    RIDER = "rider"
 
 
 #------------------- Token Expiry Per Role -------------------#
 TOKEN_EXPIRY_MINUTES = {
     UserRole.CUSTOMER: 60,
     UserRole.ADMIN: 30,
+    UserRole.RIDER: 60,
 }
 
 
@@ -188,5 +190,15 @@ def get_current_admin_user(current_user=Depends(get_current_user)):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin privileges required",
+        )
+    return current_user
+
+
+def get_current_rider_user(current_user=Depends(get_current_user)):
+    """FastAPI dependency that enforces `current_user.is_rider`."""
+    if not getattr(current_user, "is_rider", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Rider privileges required",
         )
     return current_user

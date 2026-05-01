@@ -4,7 +4,7 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.schemas.order import OrderCreate, OrderResponse, OrderStatusUpdate
@@ -12,6 +12,7 @@ from app.services.order_service import create_order
 from app.db import get_db
 from app.utils.security import get_current_admin_user, get_current_user
 from app.services.order_service import get_all_orders, get_orders_by_user, update_order_status
+from app.services.notification_service import notify_order_created, notify_ready_for_pickup
 
 
 logger = logging.getLogger(__name__)
@@ -22,6 +23,7 @@ router = APIRouter(prefix="/orders", tags=["Orders"])
 @router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 def place_order(
     order_data: OrderCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
 ):
@@ -34,7 +36,12 @@ def place_order(
         current_user: Currently authenticated user extracted from JWT
     """
     try:
-        return create_order(db, current_user.id, order_data)
+        order = create_order(db, current_user.id, order_data)
+        # Notify admins + all riders that a new order is available
+        background_tasks.add_task(
+            notify_order_created, db, order.id, current_user.email, order.total_price
+        )
+        return order
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -76,15 +83,19 @@ def get_orders(
 def update_status(
     order_id: int,
     payload: OrderStatusUpdate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user = Depends(get_current_admin_user),
 ):
     """
-    Update an order status.
-    Restricted to admin users.
+    Update an order status. Restricted to admin users.
+    Fires a notification to riders when status reaches ready_for_pickup.
     """
     try:
-        return update_order_status(db, order_id, payload.status)
+        updated = update_order_status(db, order_id, payload.status)
+        if payload.status == "ready_for_pickup":
+            background_tasks.add_task(notify_ready_for_pickup, db, order_id)
+        return updated
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

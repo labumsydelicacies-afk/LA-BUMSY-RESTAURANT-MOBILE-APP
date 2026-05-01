@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 
 # ------------------- VALID STATUSES ------------------- #
-VALID_STATUSES = ["pending", "confirmed", "preparing", "delivered", "cancelled"]
+VALID_STATUSES = ["pending", "confirmed", "preparing", "ready_for_pickup", "out_for_delivery", "delivered", "cancelled"]
 
 
 # ------------------- CREATE ------------------- #
@@ -142,7 +142,7 @@ def update_order_status(db: Session, order_id: int, new_status: str) -> Order:
     if not order:
         raise ValueError(f"Order with ID {order_id} not found")
 
-    status_flow = ["pending", "confirmed", "preparing", "delivered", "cancelled"]
+    status_flow = ["pending", "confirmed", "preparing", "ready_for_pickup", "out_for_delivery", "delivered", "cancelled"]
     current_status = order.status.lower()
     current_index = status_flow.index(current_status)
     new_index = status_flow.index(normalized_status)

@@ -91,7 +91,12 @@ def login_user(db: Session, email: str, password: str) -> dict | None:
         db.refresh(user)
         logger.info(f"Password hash upgraded for user : {email}")
 
-    role = UserRole.ADMIN if user.is_admin else UserRole.CUSTOMER
+    if user.is_admin:
+        role = UserRole.ADMIN
+    elif user.is_rider:
+        role = UserRole.RIDER
+    else:
+        role = UserRole.CUSTOMER
 
     token = create_access_token(
         data={

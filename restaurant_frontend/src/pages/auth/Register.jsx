@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
 
@@ -7,12 +7,15 @@ export default function Register() {
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
   const verifyOtp = useAuthStore((state) => state.verifyOtp);
+  const resendOtp = useAuthStore((state) => state.resendOtp);
   const [form, setForm] = useState({ email: "", password: "", nickname: "" });
   const [createdUser, setCreatedUser] = useState(null);
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const cooldownRef = useRef(null);
 
   const handleChange = (event) => {
     setForm((prev) => ({ ...prev, [event.target.name]: event.target.value }));
@@ -57,6 +60,33 @@ export default function Register() {
       setLoading(false);
     }
   };
+
+  const startCooldown = (seconds = 30) => {
+    setResendCooldown(seconds);
+    clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const handleResendOtp = async () => {
+    if (!createdUser || resendCooldown > 0) return;
+    try {
+      setError("");
+      await resendOtp(createdUser.email);
+      setSuccessMessage("A new code has been sent to your email.");
+      startCooldown(30);
+    } catch (err) {
+      setError(err.response?.data?.detail || "Could not resend OTP. Please try again.");
+    }
+  };
+
 
   const handleOtpInput = (index, value) => {
     const cleanedValue = value.replace(/\D/g, "").slice(-1);
@@ -135,6 +165,18 @@ export default function Register() {
                 </span>
               ) : "Verify email"}
             </button>
+            <p className="text-center text-sm text-gray-500">
+              Didn&apos;t receive a code?{" "}
+              <button
+                type="button"
+                id="resend-otp-btn"
+                className="font-semibold text-brandRed hover:underline disabled:opacity-50"
+                onClick={handleResendOtp}
+                disabled={resendCooldown > 0}
+              >
+                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+              </button>
+            </p>
           </form>
         ) : (
           <form className="mt-6 space-y-4" onSubmit={handleRegister}>

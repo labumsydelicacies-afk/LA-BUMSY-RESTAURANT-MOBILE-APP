@@ -70,6 +70,11 @@ export const useAuthStore = create((set, get) => ({
     await axiosInstance.post("/auth/verify-otp", { user_id: userId, otp });
   },
 
+  resendOtp: async (email) => {
+    const { data } = await axiosInstance.post("/auth/resend-otp", { email });
+    return data;
+  },
+
   forgotPassword: async (email) => {
     const { data } = await axiosInstance.post("/auth/forgot-password", { email });
     return data;

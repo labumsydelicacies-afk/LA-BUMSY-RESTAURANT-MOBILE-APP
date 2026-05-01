@@ -3,6 +3,7 @@
 #===========================#
 
 import logging
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -12,6 +13,7 @@ from app.schemas.auth import (
     ForgotPasswordRequest,
     LoginRequest,
     RegisterResponse,
+    ResendOtpRequest,
     ResetPasswordRequest,
     TokenResponse,
     VerifyOtpRequest,
@@ -20,7 +22,9 @@ from app.schemas.user import UserCreate
 from app.services.auth_service import login_user
 from app.services.email_verification_service import (
     consume_otp_for_user,
+    count_recent_otps,
     create_otp,
+    get_latest_unused_otp,
     send_verification_email_async,
     verify_otp_for_user,
 )
@@ -120,6 +124,55 @@ def verify_otp(payload: VerifyOtpRequest, session: Session = Depends(get_db)):
             detail="Invalid or expired OTP",
         )
     return {"message": "Email verified successfully"}
+
+
+@router.post("/resend-otp")
+def resend_otp(
+    payload: ResendOtpRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    """
+    Generate a fresh OTP for the given email and queue the verification email.
+    Previous unused OTPs are invalidated automatically by create_otp().
+    Always returns a safe, non-leaking response regardless of whether the
+    email belongs to a registered account.
+    """
+    _SAFE_RESPONSE = {
+        "success": True,
+        "message": "If an account exists and is unverified, a new code has been sent",
+    }
+    COOLDOWN_SECONDS = 30
+
+    user = get_user_by_email(db, payload.email)
+    if not user or user.is_verified:
+        return _SAFE_RESPONSE
+
+    # Hard cap: max 5 resend attempts per 60-minute window.
+    MAX_RESENDS = 5
+    WINDOW_MINUTES = 60
+    recent_count = count_recent_otps(db, user.id, within_minutes=WINDOW_MINUTES)
+    if recent_count >= MAX_RESENDS:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Too many OTP requests. Please wait {WINDOW_MINUTES} minutes before trying again.",
+        )
+
+    # Cooldown: reject if the latest OTP was created less than 30 s ago.
+    latest = get_latest_unused_otp(db, user.id)
+    if latest is not None:
+        elapsed = (datetime.now() - latest.created_at).total_seconds()
+        if elapsed < COOLDOWN_SECONDS:
+            return _SAFE_RESPONSE
+
+    otp = create_otp(db, user.id)
+    try:
+        background_tasks.add_task(send_verification_email_async, user.email, otp)
+        logger.info("Resend OTP email task queued for email=%s", user.email)
+    except Exception:
+        logger.exception("Failed to queue resend OTP email for email=%s", user.email)
+
+    return _SAFE_RESPONSE
 
 
 @router.post("/forgot-password")

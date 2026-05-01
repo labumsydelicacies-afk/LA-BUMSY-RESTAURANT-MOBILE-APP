@@ -36,6 +36,19 @@ def get_latest_unused_otp(session: Session, user_id: int) -> EmailVerification |
     )
 
 
+def count_recent_otps(session: Session, user_id: int, within_minutes: int = 60) -> int:
+    """Count all OTPs created for a user within the last N minutes."""
+    cutoff = datetime.now() - timedelta(minutes=within_minutes)
+    return (
+        session.query(EmailVerification)
+        .filter(
+            EmailVerification.user_id == user_id,
+            EmailVerification.created_at >= cutoff,
+        )
+        .count()
+    )
+
+
 def generate_otp(length: int = 6) -> str:
     """Generate a numeric OTP."""
     return "".join(str(random.randint(0, 9)) for _ in range(length))

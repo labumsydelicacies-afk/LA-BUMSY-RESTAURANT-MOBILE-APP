@@ -5,7 +5,7 @@ import BottomNav from "../../components/BottomNav";
 import OrderCard from "../../components/OrderCard";
 import { useSocketStore } from "../../stores/socketStore";
 
-const statuses = ["pending", "confirmed", "preparing", "delivered", "cancelled"];
+const statuses = ["pending", "confirmed", "preparing", "ready_for_pickup", "out_for_delivery", "delivered", "cancelled"];
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);

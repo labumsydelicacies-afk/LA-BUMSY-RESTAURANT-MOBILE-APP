@@ -44,3 +44,7 @@ class ResetPasswordRequest(BaseModel):
     user_id: int | None = None
     otp_code: str
     new_password: str
+
+
+class ResendOtpRequest(BaseModel):
+    email: EmailStr

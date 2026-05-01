@@ -2,8 +2,8 @@ const STATUS_COLORS = {
   pending: "bg-amber-100 text-amber-800 border-amber-200",
   confirmed: "bg-blue-100 text-blue-800 border-blue-200",
   preparing: "bg-purple-100 text-purple-800 border-purple-200",
-  ready: "bg-indigo-100 text-indigo-800 border-indigo-200",
-  picked_up: "bg-cyan-100 text-cyan-800 border-cyan-200",
+  ready_for_pickup: "bg-indigo-100 text-indigo-800 border-indigo-200",
+  out_for_delivery: "bg-cyan-100 text-cyan-800 border-cyan-200",
   delivered: "bg-emerald-100 text-emerald-800 border-emerald-200",
   cancelled: "bg-rose-100 text-rose-800 border-rose-200",
 };
@@ -12,8 +12,8 @@ const STATUS_LABELS = {
   pending: "Pending",
   confirmed: "Confirmed",
   preparing: "Preparing",
-  ready: "Ready for Pickup",
-  picked_up: "On the way",
+  ready_for_pickup: "Ready for Pickup",
+  out_for_delivery: "On the Way",
   delivered: "Delivered",
   cancelled: "Cancelled",
 };
