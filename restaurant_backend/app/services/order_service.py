@@ -152,6 +152,9 @@ def update_order_status(db: Session, order_id: int, new_status: str) -> Order:
             f"Cannot move order status backwards from '{order.status}' to '{new_status}'"
         )
 
+    if normalized_status == "cancelled" and current_status == "delivered":
+        raise ValueError("Cannot cancel an order that has already been delivered")
+
     try:
         old_status = order.status
         order.status = normalized_status

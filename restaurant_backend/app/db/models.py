@@ -79,6 +79,12 @@ class Order(Base):
     delivery = relationship("Delivery", back_populates="order", uselist=False)
     delivery_verification = relationship("DeliveryVerification", back_populates="order", uselist=False)
 
+    @property
+    def delivery_otp(self) -> str | None:
+        if self.delivery_verification and not self.delivery_verification.is_used:
+            return self.delivery_verification.otp_hash
+        return None
+
 
 
 

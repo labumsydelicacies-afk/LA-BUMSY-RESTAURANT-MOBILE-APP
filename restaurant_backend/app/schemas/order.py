@@ -37,6 +37,7 @@ class OrderResponse(BaseModel):
     total_price: float
     created_at: datetime
     items: List[OrderItemResponse]
+    delivery_otp: str | None = None
 
     class Config:
         from_attributes = True

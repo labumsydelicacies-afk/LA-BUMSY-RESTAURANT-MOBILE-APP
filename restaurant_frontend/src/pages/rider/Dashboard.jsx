@@ -170,9 +170,9 @@ export default function RiderDashboard() {
   };
 
   // ── derive active (picked-up but not delivered) for OTP entry ────────────
-  const activeDeliveries = myDeliveries.filter((d) => d.picked_up_at && !d.delivered_at);
-  const pendingDeliveries = myDeliveries.filter((d) => !d.picked_up_at);
-  const completedDeliveries = myDeliveries.filter((d) => d.delivered_at);
+  const activeDeliveries = myDeliveries.filter((d) => d.picked_up_at && !d.delivered_at && d.order?.status !== "cancelled");
+  const pendingDeliveries = myDeliveries.filter((d) => !d.picked_up_at && d.order?.status !== "cancelled");
+  const completedDeliveries = myDeliveries.filter((d) => d.delivered_at || d.order?.status === "cancelled");
 
   return (
     <main>
@@ -323,8 +323,12 @@ export default function RiderDashboard() {
                     <p className="font-heading text-base font-black text-gray-900">
                       Order #{String(delivery.order_id).slice(-6)}
                     </p>
-                    <span className="rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border-emerald-200">
-                      Delivered
+                    <span className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${
+                      delivery.order?.status === "cancelled" 
+                        ? "bg-rose-100 text-rose-800 border-rose-200" 
+                        : "bg-emerald-100 text-emerald-800 border-emerald-200"
+                    }`}>
+                      {delivery.order?.status === "cancelled" ? "Cancelled" : "Delivered"}
                     </span>
                   </div>
                   {delivery.delivered_at ? (

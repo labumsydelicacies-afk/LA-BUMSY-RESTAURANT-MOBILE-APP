@@ -156,7 +156,7 @@ def complete_order_delivery(
         ) from exc
 
 
-@router.get("/my-deliveries", response_model=list[DeliveryResponse])
+@router.get("/my-deliveries", response_model=list[DeliveryWithOrderResponse])
 def my_deliveries(
     db: Session = Depends(get_db),
     current_rider=Depends(get_current_rider_user),

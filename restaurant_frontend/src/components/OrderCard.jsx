@@ -53,6 +53,14 @@ export default function OrderCard({ order, children }) {
         </p>
       </div>
 
+      {order.delivery_otp && status === "out_for_delivery" && (
+        <div className="mt-4 rounded-xl bg-cyan-50 p-4 border border-cyan-100 flex flex-col items-center justify-center">
+          <p className="text-xs font-bold text-cyan-800 uppercase tracking-wider mb-1">Delivery Code</p>
+          <p className="font-heading text-3xl font-black text-cyan-900 tracking-widest">{order.delivery_otp}</p>
+          <p className="text-xs text-cyan-700 mt-1 text-center">Give this code to the rider when they arrive.</p>
+        </div>
+      )}
+
       {children ? <div className="mt-4 pt-2">{children}</div> : null}
     </article>
   );

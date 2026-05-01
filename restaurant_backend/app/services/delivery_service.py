@@ -128,7 +128,6 @@ def mark_picked_up(db: Session, order_id: int, rider_id: int) -> tuple[Delivery,
 
     # Generate OTP
     otp = _generate_otp()
-    otp_hash = _hash_otp(otp)
 
     # Remove old verification if any (idempotent retry safety)
     db.query(DeliveryVerification).filter(
@@ -137,7 +136,7 @@ def mark_picked_up(db: Session, order_id: int, rider_id: int) -> tuple[Delivery,
 
     verification = DeliveryVerification(
         order_id=order_id,
-        otp_hash=otp_hash,
+        otp_hash=otp,
         expires_at=datetime.now() + timedelta(hours=DELIVERY_OTP_EXPIRY_HOURS),
         is_used=False,
         created_at=datetime.now(),
@@ -188,7 +187,7 @@ def complete_delivery(db: Session, order_id: int, rider_id: int, otp: str) -> De
     if verification.expires_at < datetime.now():
         raise ValueError("OTP has expired")
 
-    if verification.otp_hash != _hash_otp(otp):
+    if verification.otp_hash != otp:
         raise ValueError("Invalid OTP")
 
     # Consume OTP
