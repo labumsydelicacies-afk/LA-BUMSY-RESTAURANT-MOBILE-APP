@@ -12,10 +12,7 @@ export default function Navbar({ title }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const nickname =
-    user?.nickname?.trim() ||
-    user?.email?.split("@")?.[0] ||
-    "User";
+  const nickname = user?.nickname?.trim() || "User";
   const initial = nickname.charAt(0).toUpperCase();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -29,26 +26,31 @@ export default function Navbar({ title }) {
   return (
     <>
       <header className="sticky top-0 z-50 flex items-center justify-between bg-white/80 px-5 py-4 backdrop-blur-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border-b border-gray-100">
-        <div 
-          className="flex items-center gap-3 cursor-pointer transition hover:opacity-80" 
-          onClick={() => setIsProfileOpen(true)}
-          title="Edit Profile"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brandRed text-lg font-bold text-white shadow-sm ring-2 ring-white">
-            {initial}
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <p className="text-sm font-bold text-gray-800">{nickname}</p>
-              {title && <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-500">{title}</span>}
-            </div>
-            <p className="text-[10px] font-medium text-gray-500 truncate max-w-[120px]">
-              {user?.phone ? user.phone : "Add phone number"}
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1.5">
+            <div className="h-2 w-2 rounded-full bg-brandYellow"></div>
+            <p className="font-heading text-xl font-black tracking-tight text-brandRed">
+              La Bumsy
             </p>
           </div>
+          {title ? (
+            <p className="mt-0.5 text-xs font-medium text-gray-500">{title}</p>
+          ) : null}
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div 
+            className="flex items-center gap-2 cursor-pointer transition hover:opacity-80 bg-gray-50 rounded-full pl-1 pr-3 py-1 ring-1 ring-inset ring-gray-200" 
+            onClick={() => setIsProfileOpen(true)}
+            title="Edit Profile"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brandRed text-sm font-bold text-white shadow-sm">
+              {initial}
+            </div>
+            <div className="flex flex-col hidden sm:flex">
+              <p className="text-[11px] font-bold text-gray-800 leading-tight">{nickname}</p>
+            </div>
+          </div>
         {/* Cart Icon inside Navbar for convenience */}
         <button 
           onClick={() => navigate('/user/cart')}
