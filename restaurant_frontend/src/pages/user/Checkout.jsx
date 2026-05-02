@@ -35,7 +35,7 @@ export default function Checkout() {
       setLoadingStep("redirecting");
       const { data: paymentData } = await axiosInstance.post("/payments/initialize", {
         order_id: order.id,
-        payment_method: paymentMethod,
+        payment_options: paymentMethod,
       });
 
       // ── Step 3: Hard-redirect to Flutterwave hosted payment page ─────────

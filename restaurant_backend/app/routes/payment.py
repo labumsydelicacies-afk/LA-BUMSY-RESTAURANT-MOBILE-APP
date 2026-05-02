@@ -19,13 +19,18 @@ Security notes:
 
 import logging
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.db.models import Order
-from app.services.payment_service import handle_webhook, initialize_payment, verify_payment
+from app.services.payment_service import (
+    confirm_order_payment,
+    handle_webhook,
+    initialize_payment,
+    verify_payment,
+)
 from app.utils.security import get_current_user
 
 logger = logging.getLogger(__name__)
@@ -37,7 +42,8 @@ router = APIRouter(prefix="/payments", tags=["Payments"])
 
 class InitializePaymentRequest(BaseModel):
     order_id: int
-    payment_options: str = "card,banktransfer"
+    payment_options: str = "banktransfer"
+    payment_method: str | None = None
 
 
 class InitializePaymentResponse(BaseModel):
@@ -96,7 +102,8 @@ def initialize(
         )
 
     try:
-        result = initialize_payment(order, current_user, body.payment_options)
+        selected_payment_option = body.payment_method or body.payment_options
+        result = initialize_payment(order, current_user, selected_payment_option)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -163,6 +170,8 @@ async def webhook(
 )
 def verify(
     transaction_id: str,
+    tx_ref: str | None = Query(default=None),
+    order_id: int | None = Query(default=None),
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
@@ -180,20 +189,25 @@ def verify(
       3. Otherwise call Flutterwave verify API.
       4. If confirmed: update order state and trigger notifications.
     """
-    # First check if we already have this confirmed in the database.
-    order = db.query(Order).filter(
-        Order.external_transaction_id == transaction_id,
-        Order.user_id == current_user.id,
-    ).first()
+    order = None
+
+    if tx_ref:
+        order = db.query(Order).filter(
+            Order.payment_reference == tx_ref,
+            Order.user_id == current_user.id,
+        ).first()
+
+    if order is None and order_id is not None:
+        order = db.query(Order).filter(
+            Order.id == order_id,
+            Order.user_id == current_user.id,
+        ).first()
 
     if order is None:
-        # Also check by payment_reference (tx_ref), which may match when
-        # the webhook hasn't fired yet but the user returned from payment page.
         order = db.query(Order).filter(
-            Order.payment_reference.like(f"order_%"),
+            Order.external_transaction_id == transaction_id,
             Order.user_id == current_user.id,
-            Order.payment_status != "paid",
-        ).order_by(Order.created_at.desc()).first()
+        ).first()
 
     if order is None:
         raise HTTPException(
@@ -212,13 +226,12 @@ def verify(
         return VerifyPaymentResponse(paid=False, order_id=order.id)
 
     # Confirm payment
-    from datetime import datetime, timezone
-    order.payment_status = "paid"
-    order.paid_at = datetime.now(timezone.utc)
-    order.external_transaction_id = transaction_id
-    order.status = "pending"
-    db.commit()
-    db.refresh(order)
+    confirm_order_payment(
+        db,
+        order,
+        transaction_id=transaction_id,
+        amount=tx_data.get("amount"),
+    )
 
     # We rely entirely on the webhook to send notifications and emails
     # to avoid duplicate receipts and premature emails.

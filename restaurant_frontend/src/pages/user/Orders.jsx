@@ -5,15 +5,42 @@ import BottomNav from "../../components/BottomNav";
 import OrderCard from "../../components/OrderCard";
 import { useAuthStore } from "../../stores/authStore";
 import { useSocketStore } from "../../stores/socketStore";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 export default function Orders() {
   const user = useAuthStore((state) => state.user);
   const connect = useSocketStore((state) => state.connect);
   const disconnect = useSocketStore((state) => state.disconnect);
+  const [searchParams] = useSearchParams();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const paymentState = searchParams.get("payment");
+  const highlightedOrderId = Number(searchParams.get("orderId"));
+
+  const paymentNotice =
+    paymentState === "paid"
+      ? {
+          tone: "bg-green-50 border-green-100 text-green-700",
+          text: highlightedOrderId
+            ? `Payment confirmed for order #${highlightedOrderId}.`
+            : "Payment confirmed successfully.",
+        }
+      : paymentState === "failed"
+      ? {
+          tone: "bg-red-50 border-red-100 text-red-700",
+          text: highlightedOrderId
+            ? `Payment failed for order #${highlightedOrderId}.`
+            : "Payment failed. Please try again.",
+        }
+      : paymentState === "pending"
+      ? {
+          tone: "bg-amber-50 border-amber-100 text-amber-700",
+          text: highlightedOrderId
+            ? `Payment is still pending for order #${highlightedOrderId}.`
+            : "Payment is still pending.",
+        }
+      : null;
 
   const fetchOrders = async () => {
     try {
@@ -52,6 +79,12 @@ export default function Orders() {
       <section className="mx-4 mt-6 pb-28 max-w-lg mx-auto">
         <h1 className="font-heading text-3xl font-extrabold text-gray-900 mb-6 fade-up">My Orders</h1>
 
+        {paymentNotice && (
+          <div className={`mb-4 rounded-2xl border px-4 py-3 text-sm font-semibold fade-up ${paymentNotice.tone}`}>
+            {paymentNotice.text}
+          </div>
+        )}
+
         {loading ? (
           <div className="space-y-4 fade-up" style={{ animationDelay: '0.1s' }}>
             {[...Array(3)].map((_, i) => (
@@ -77,7 +110,7 @@ export default function Orders() {
           <div className="space-y-4">
             {orders.map((order, idx) => (
               <div key={order.id} className="fade-up" style={{ animationDelay: `${0.1 + (idx * 0.05)}s` }}>
-                <OrderCard order={order} />
+                <OrderCard order={order} isHighlighted={highlightedOrderId === Number(order.id)} />
               </div>
             ))}
           </div>

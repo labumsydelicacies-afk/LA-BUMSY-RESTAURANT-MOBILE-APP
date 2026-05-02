@@ -17,6 +17,7 @@ import logging
 from datetime import datetime, timezone
 
 import httpx
+from sqlalchemy.orm import Session
 
 from app.config import (
     FLUTTERWAVE_BASE_URL,
@@ -28,6 +29,8 @@ from app.db.models import Order, User
 from app.services.notification_service import notify_order_created
 
 logger = logging.getLogger(__name__)
+
+ALLOWED_PAYMENT_OPTIONS = {"banktransfer", "opay"}
 
 
 # ─── Reference generation ───────────────────────────────────────────────────
@@ -44,8 +47,39 @@ def generate_tx_ref(order_id: int) -> str:
 
 # ─── Payment initialisation ─────────────────────────────────────────────────
 
-def initialize_payment(order: Order, user: User, payment_options: str = "card,banktransfer") -> dict:
+def normalize_payment_option(payment_option: str | None) -> str:
+    normalized = (payment_option or "banktransfer").strip().lower()
+    if normalized not in ALLOWED_PAYMENT_OPTIONS:
+        raise ValueError("Payment method must be either 'banktransfer' or 'opay'")
+    return normalized
+
+
+def confirm_order_payment(
+    db: Session,
+    order: Order,
+    transaction_id: str,
+    amount: float | None = None,
+) -> Order:
+    order.payment_status = "paid"
+    order.paid_at = datetime.now(timezone.utc)
+    order.external_transaction_id = transaction_id
+    order.status = "pending"
+
+    db.commit()
+    db.refresh(order)
+
+    logger.info(
+        "Payment confirmed for order #%s | tx=%s | amount=%s",
+        order.id,
+        transaction_id,
+        amount,
+    )
+    return order
+
+
+def initialize_payment(order: Order, user: User, payment_options: str = "banktransfer") -> dict:
     reference = generate_tx_ref(order.id)
+    normalized_payment_option = normalize_payment_option(payment_options)
     
     # Mandatory defensive validation before any API calls
     if not user.email:
@@ -53,7 +87,7 @@ def initialize_payment(order: Order, user: User, payment_options: str = "card,ba
     if not reference:
         raise ValueError("tx_ref is required for payment initialization")
 
-    callback_url = f"{FRONTEND_URL}/payment/callback"
+    callback_url = f"{FRONTEND_URL}/payment/callback?order_id={order.id}"
 
     headers = {
         "Authorization": f"Bearer {FLUTTERWAVE_SECRET_KEY}",
@@ -77,7 +111,7 @@ def initialize_payment(order: Order, user: User, payment_options: str = "card,ba
             "tx_ref": reference,       # Required by Flutterwave
             "amount": order.total_price,
             "currency": "NGN",
-            "payment_options": payment_options,
+            "payment_options": normalized_payment_option,
             "redirect_url": callback_url,
             "customer": {"email": user.email, "name": user.nickname},
         }
@@ -88,7 +122,7 @@ def initialize_payment(order: Order, user: User, payment_options: str = "card,ba
         sanitized_payload["customer"] = {"email": "***", "name": "***"}
 
         logger.info(
-            "Initializing payment | order_id=%s | tx_ref=%s | user_email=%s | payload=%s", 
+            "Initializing payment | order_id=%s | tx_ref=%s | user_email=%s | payload=%s",
             order.id, reference, user.email, sanitized_payload
         )
 
@@ -256,17 +290,11 @@ def handle_webhook(payload: dict, verif_hash: str | None, db) -> dict:
         }
 
     # ── Step 6: Mark as paid and activate the order ──────────────
-    order.payment_status = "paid"
-    order.paid_at = datetime.now(timezone.utc)
-    order.external_transaction_id = transaction_id
-    order.status = "pending"  # now visible to admins for kitchen processing
-
-    db.commit()
-    db.refresh(order)
-
-    logger.info(
-        "Payment confirmed for order #%s | tx=%s | tx_ref=%s",
-        order.id, transaction_id, tx_ref,
+    confirm_order_payment(
+        db,
+        order,
+        transaction_id=transaction_id,
+        amount=tx_data.get("amount"),
     )
 
     # ── Step 7: Notify admins NOW (payment confirmed) ────────────

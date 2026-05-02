@@ -20,15 +20,17 @@ const STATUS_LABELS = {
   cancelled: "Cancelled",
 };
 
-export default function OrderCard({ order, children }) {
+export default function OrderCard({ order, children, isHighlighted = false }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const status = String(order.status || "pending").toLowerCase();
   const statusStyle = STATUS_COLORS[status] || "bg-gray-100 text-gray-800 border-gray-200";
   const statusLabel = STATUS_LABELS[status] || order.status;
   const orderIdLabel = order?.id ? String(order.id).slice(-6) : "N/A";
+  const paymentStatus = String(order.payment_status || "pending").toLowerCase();
+  const paymentIsPaid = paymentStatus === "paid";
 
   return (
-    <article className="rounded-3xl bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] border border-gray-100 relative overflow-hidden scale-in">
+    <article className={`rounded-3xl bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] border relative overflow-hidden scale-in ${isHighlighted ? "border-brandRed ring-2 ring-brandRed/15" : "border-gray-100"}`}>
       {/* Decorative side accent based on status */}
       <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${statusStyle.split(' ')[0].replace('100', '400')}`} />
       
@@ -46,6 +48,13 @@ export default function OrderCard({ order, children }) {
         
         <span className={`rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider ${statusStyle}`}>
           {statusLabel}
+        </span>
+      </div>
+
+      <div className="mb-4 flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3 border border-gray-100">
+        <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Payment</p>
+        <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${paymentIsPaid ? "bg-green-100 text-green-700" : paymentStatus === "failed" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
+          {paymentIsPaid ? "Paid" : paymentStatus === "failed" ? "Failed" : "Pending"}
         </span>
       </div>
       
