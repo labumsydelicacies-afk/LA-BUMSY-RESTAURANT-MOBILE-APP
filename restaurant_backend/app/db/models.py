@@ -30,7 +30,6 @@ class User(Base):
     address: Mapped[str | None] = mapped_column(String, nullable=True)
 
     is_email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_phone_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_profile_complete: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
