@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import CORS_ALLOW_ORIGIN_REGEX, CORS_ALLOW_ORIGINS
-from app.routes import auth, food, orders, delivery, admin_users
+from app.routes import auth, food, orders, delivery, admin_users, payment
 
 
 logging.basicConfig(
@@ -44,6 +44,7 @@ app.include_router(food.router)
 app.include_router(orders.router)
 app.include_router(delivery.router)
 app.include_router(admin_users.router)
+app.include_router(payment.router)
 
 
 @app.get("/", tags=["Health"])

@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 
 # ------------------- VALID STATUSES ------------------- #
-VALID_STATUSES = ["pending", "confirmed", "preparing", "ready_for_pickup", "out_for_delivery", "delivered", "cancelled"]
+VALID_STATUSES = ["pending_payment", "payment_failed", "pending", "confirmed", "preparing", "ready_for_pickup", "out_for_delivery", "delivered", "cancelled"]
 
 
 # ------------------- CREATE ------------------- #
@@ -61,7 +61,12 @@ def create_order(db: Session, user_id: int, order_data: OrderCreate) -> Order:
         new_order = Order(
             user_id=user_id,
             total_price=round(total_price, 2),
-            status="pending"
+            # Order starts as pending_payment — it becomes active ONLY
+            # after Flutterwave confirms payment via webhook/verify.
+            status="pending_payment",
+            payment_status="pending",
+            payment_provider="flutterwave",
+            currency="NGN",
         )
 
         db.add(new_order)
@@ -74,7 +79,7 @@ def create_order(db: Session, user_id: int, order_data: OrderCreate) -> Order:
         db.commit()
         db.refresh(new_order)
 
-        logger.info(f"Order created : ID {new_order.id} | User {user_id} | Total : ${new_order.total_price}")
+        logger.info(f"Order created : ID {new_order.id} | User {user_id} | Total : \u20a6{new_order.total_price}")
         return new_order
 
     except SQLAlchemyError as e:
@@ -142,15 +147,22 @@ def update_order_status(db: Session, order_id: int, new_status: str) -> Order:
     if not order:
         raise ValueError(f"Order with ID {order_id} not found")
 
+    # Payment states are not part of the kitchen flow — allow them to skip
+    # the transition guard so the payment service can update freely.
+    PAYMENT_STATES = {"pending_payment", "payment_failed"}
+
     status_flow = ["pending", "confirmed", "preparing", "ready_for_pickup", "out_for_delivery", "delivered", "cancelled"]
     current_status = order.status.lower()
-    current_index = status_flow.index(current_status)
-    new_index = status_flow.index(normalized_status)
 
-    if new_index < current_index and normalized_status != "cancelled":
-        raise ValueError(
-            f"Cannot move order status backwards from '{order.status}' to '{new_status}'"
-        )
+    # If either side is a payment state, bypass position-based guard.
+    if current_status not in PAYMENT_STATES and normalized_status not in PAYMENT_STATES:
+        current_index = status_flow.index(current_status) if current_status in status_flow else 0
+        new_index = status_flow.index(normalized_status) if normalized_status in status_flow else 0
+
+        if new_index < current_index and normalized_status != "cancelled":
+            raise ValueError(
+                f"Cannot move order status backwards from '{order.status}' to '{new_status}'"
+            )
 
     if normalized_status == "cancelled" and current_status == "delivered":
         raise ValueError("Cannot cancel an order that has already been delivered")

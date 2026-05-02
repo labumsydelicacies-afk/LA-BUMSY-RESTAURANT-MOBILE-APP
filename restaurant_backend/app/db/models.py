@@ -68,10 +68,25 @@ class Order(Base):
 
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     rider_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"), nullable=True, index=True)
-    status: Mapped[str] = mapped_column(String, default="pending")
+    status: Mapped[str] = mapped_column(String, default="pending_payment")
     total_price: Mapped[float] = mapped_column(Float, default=0)
     address: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+
+    # ── Payment fields ───────────────────────────────────────────
+    # Tracks whether this order has been paid for via Flutterwave.
+    payment_status: Mapped[str] = mapped_column(String, default="pending", nullable=False)
+    # Unique Flutterwave tx_ref stored when payment is initialised.
+    payment_reference: Mapped[str | None] = mapped_column(String, unique=True, nullable=True, index=True)
+    # Flutterwave transaction ID returned after webhook/verify confirmation.
+    external_transaction_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Always "flutterwave" for now — extensible for future providers.
+    payment_provider: Mapped[str] = mapped_column(String, default="flutterwave", nullable=False)
+    # Timestamp of confirmed payment.
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    # Transaction currency — always NGN.
+    currency: Mapped[str] = mapped_column(String, default="NGN", nullable=False)
+    # ─────────────────────────────────────────────────────────────
 
     user = relationship("User", back_populates="orders", foreign_keys=[user_id])
     rider = relationship("User", foreign_keys=[rider_id])

@@ -10,6 +10,7 @@ const FoodDetail = lazy(() => import("./pages/user/FoodDetail"));
 const Cart = lazy(() => import("./pages/user/Cart"));
 const Checkout = lazy(() => import("./pages/user/Checkout"));
 const UserOrders = lazy(() => import("./pages/user/Orders"));
+const PaymentCallback = lazy(() => import("./pages/user/PaymentCallback"));
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
 const AdminMenu = lazy(() => import("./pages/admin/Menu"));
 const AdminOrders = lazy(() => import("./pages/admin/Orders"));
@@ -98,6 +99,14 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={["user"]}>
                 <UserOrders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payment/callback"
+            element={
+              <ProtectedRoute allowedRoles={["user"]}>
+                <PaymentCallback />
               </ProtectedRoute>
             }
           />

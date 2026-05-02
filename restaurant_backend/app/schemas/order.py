@@ -39,6 +39,12 @@ class OrderResponse(BaseModel):
     items: List[OrderItemResponse]
     delivery_otp: str | None = None
 
+    # Payment fields — populated after Flutterwave integration
+    payment_status: str | None = None
+    payment_reference: str | None = None
+    paid_at: datetime | None = None
+    payment_provider: str | None = None
+
     class Config:
         from_attributes = True
 
