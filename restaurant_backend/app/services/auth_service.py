@@ -8,7 +8,7 @@ import logging
 
 from sqlalchemy.orm import Session
 
-from app.services.user_service import get_user_by_email
+from app.services.user_service import get_user_by_email, get_user_display_name, is_profile_complete_for_user
 from app.utils.security import (
     UserRole,
     create_access_token,
@@ -98,13 +98,27 @@ def login_user(db: Session, email: str, password: str) -> dict | None:
     else:
         role = UserRole.CUSTOMER
 
-    user_state = "PROFILE_INCOMPLETE" if not user.is_profile_complete else "ACTIVE"
+    derived_profile_complete = is_profile_complete_for_user(user)
+    if user.is_profile_complete != derived_profile_complete:
+        user.is_profile_complete = derived_profile_complete
+        db.commit()
+        db.refresh(user)
+
+    if user.is_admin:
+        user_state = "ACTIVE"
+    else:
+        user_state = "PROFILE_INCOMPLETE" if not user.is_profile_complete else "ACTIVE"
 
     token = create_access_token(
         data={
             "sub": user.email,
             "user_id": user.id,
             "nickname": user.nickname,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "display_name": get_user_display_name(user),
+            "phone": user.phone,
+            "address": user.address,
             "user_state": user_state
         },
         role=role,
@@ -117,5 +131,10 @@ def login_user(db: Session, email: str, password: str) -> dict | None:
         "token_type": "bearer",
         "role": role,
         "nickname": user.nickname,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "display_name": get_user_display_name(user),
+        "phone": user.phone,
+        "address": user.address,
         "user_state": user_state
     }

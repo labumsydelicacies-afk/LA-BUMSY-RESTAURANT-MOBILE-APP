@@ -20,6 +20,11 @@ function mapRole(rawRole) {
   return "user";
 }
 
+function buildDisplayName(userLike) {
+  const firstLast = [userLike?.first_name, userLike?.last_name].filter(Boolean).join(" ").trim();
+  return firstLast || userLike?.display_name || userLike?.nickname || "User";
+}
+
 export const useAuthStore = create((set, get) => ({
   token: localStorage.getItem("token"),
   user: null,
@@ -45,6 +50,9 @@ export const useAuthStore = create((set, get) => ({
         email: payload.sub, 
         id: payload.user_id, 
         nickname: payload.nickname,
+        first_name: payload.first_name || "",
+        last_name: payload.last_name || "",
+        display_name: buildDisplayName(payload),
         userState: payload.user_state || "ACTIVE",
         phone: payload.phone || "",
         address: payload.address || ""
@@ -67,6 +75,9 @@ export const useAuthStore = create((set, get) => ({
         email: payload?.sub ?? email,
         id: payload?.user_id ?? null,
         nickname: data.nickname ?? payload?.nickname ?? "",
+        first_name: data.first_name ?? payload?.first_name ?? "",
+        last_name: data.last_name ?? payload?.last_name ?? "",
+        display_name: buildDisplayName({ ...payload, ...data }),
         userState: data.user_state ?? payload?.user_state ?? "ACTIVE",
         phone: data.phone ?? payload?.phone ?? "",
         address: data.address ?? payload?.address ?? ""
@@ -111,7 +122,7 @@ export const useAuthStore = create((set, get) => ({
   completeProfile: async (payload) => {
     const { data } = await axiosInstance.post("/profile/complete", payload);
     set((state) => ({
-      user: { ...state.user, ...data, userState: "ACTIVE" }
+      user: { ...state.user, ...data, display_name: buildDisplayName(data), userState: "ACTIVE" }
     }));
     return data;
   },
@@ -119,7 +130,7 @@ export const useAuthStore = create((set, get) => ({
   updateProfile: async (payload) => {
     const { data } = await axiosInstance.post("/profile/update", payload);
     set((state) => ({
-      user: { ...state.user, ...data }
+      user: { ...state.user, ...data, display_name: buildDisplayName(data) }
     }));
     return data;
   },

@@ -30,6 +30,7 @@ from app.services.notification_service import (
     notify_order_delivered,
     notify_picked_up_otp,
 )
+from app.services.user_service import get_user_display_name
 from app.utils.security import get_current_admin_user, get_current_rider_user, get_current_user
 
 logger = logging.getLogger(__name__)
@@ -75,7 +76,7 @@ def accept_delivery(
                 notify_order_assigned,
                 db,
                 payload.order_id,
-                current_rider.nickname,
+                get_user_display_name(current_rider),
                 user_email,
             )
 

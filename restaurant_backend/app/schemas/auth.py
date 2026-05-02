@@ -21,6 +21,11 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     role: str
     nickname: str | None
+    first_name: str | None = None
+    last_name: str | None = None
+    display_name: str | None = None
+    phone: str | None = None
+    address: str | None = None
     user_state: str = "ACTIVE" # "PROFILE_INCOMPLETE" | "ACTIVE"
 
 

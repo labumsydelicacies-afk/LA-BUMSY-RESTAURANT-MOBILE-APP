@@ -12,8 +12,8 @@ export default function Navbar({ title }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const nickname = user?.nickname?.trim() || "User";
-  const initial = nickname.charAt(0).toUpperCase();
+  const displayName = user?.display_name?.trim() || user?.nickname?.trim() || "User";
+  const initial = displayName.charAt(0).toUpperCase();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -61,7 +61,7 @@ export default function Navbar({ title }) {
           <div 
             className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-brandCream text-brandRed shadow-sm ring-1 ring-inset ring-red-100 transition-all hover:bg-red-50 hover:scale-105 active:scale-95" 
             onClick={() => setIsProfileOpen(true)}
-            title={`Hi, ${nickname} (Edit Profile)`}
+            title={`Hi, ${displayName} (Edit Profile)`}
           >
             <span className="text-[15px] font-black">{initial}</span>
           </div>

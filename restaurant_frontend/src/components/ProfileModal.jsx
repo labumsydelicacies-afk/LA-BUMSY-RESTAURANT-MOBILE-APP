@@ -3,11 +3,17 @@ import { useAuthStore } from "../stores/authStore";
 
 export default function ProfileModal({ isForced = false, onClose }) {
   const user = useAuthStore((state) => state.user);
+  const role = useAuthStore((state) => state.role);
   const completeProfile = useAuthStore((state) => state.completeProfile);
   const updateProfile = useAuthStore((state) => state.updateProfile);
+  const isRider = role === "rider";
+  const isAdmin = role === "admin";
+  const shouldShowAddress = !isAdmin;
 
   const [form, setForm] = useState({
     nickname: user?.nickname || "",
+    first_name: user?.first_name || "",
+    last_name: user?.last_name || "",
     phone: user?.phone || "",
     address: user?.address || "",
   });
@@ -49,24 +55,58 @@ export default function ProfileModal({ isForced = false, onClose }) {
         </h2>
         <p className="mt-1 text-sm text-gray-500">
           {isForced
-            ? "Please provide your details before continuing."
+            ? isRider
+              ? "Please add your first name, last name, phone number, and home address before continuing."
+              : "Please provide your details before continuing."
             : "Update your personal information."}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-600">
-              Nickname
-            </label>
-            <input
-              name="nickname"
-              value={form.nickname}
-              onChange={handleChange}
-              placeholder="e.g. John"
-              required
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brandRed focus:bg-white focus:ring-2 focus:ring-brandRed/20"
-            />
-          </div>
+          {isRider ? (
+            <>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-gray-600">
+                  First Name
+                </label>
+                <input
+                  name="first_name"
+                  value={form.first_name}
+                  onChange={handleChange}
+                  placeholder="e.g. John"
+                  required={!isAdmin}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brandRed focus:bg-white focus:ring-2 focus:ring-brandRed/20"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-gray-600">
+                  Last Name
+                </label>
+                <input
+                  name="last_name"
+                  value={form.last_name}
+                  onChange={handleChange}
+                  placeholder="e.g. Doe"
+                  required={!isAdmin}
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brandRed focus:bg-white focus:ring-2 focus:ring-brandRed/20"
+                />
+              </div>
+            </>
+          ) : (
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-gray-600">
+                Nickname
+              </label>
+              <input
+                name="nickname"
+                value={form.nickname}
+                onChange={handleChange}
+                placeholder="e.g. John"
+                required={!isAdmin}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brandRed focus:bg-white focus:ring-2 focus:ring-brandRed/20"
+              />
+            </div>
+          )}
 
           <div>
             <label className="mb-1 block text-xs font-semibold text-gray-600">
@@ -77,25 +117,27 @@ export default function ProfileModal({ isForced = false, onClose }) {
               value={form.phone}
               onChange={handleChange}
               placeholder="08012345678"
-              required
+              required={!isAdmin}
               className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brandRed focus:bg-white focus:ring-2 focus:ring-brandRed/20"
             />
           </div>
 
-          <div>
-            <label className="mb-1 block text-xs font-semibold text-gray-600">
-              Delivery Address
-            </label>
-            <textarea
-              name="address"
-              value={form.address}
-              onChange={handleChange}
-              placeholder="Your full delivery address"
-              required
-              rows={3}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brandRed focus:bg-white focus:ring-2 focus:ring-brandRed/20"
-            />
-          </div>
+          {shouldShowAddress ? (
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-gray-600">
+                Home Address
+              </label>
+              <textarea
+                name="address"
+                value={form.address}
+                onChange={handleChange}
+                placeholder="Your full home address"
+                required={!isAdmin}
+                rows={3}
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none transition focus:border-brandRed focus:bg-white focus:ring-2 focus:ring-brandRed/20"
+              />
+            </div>
+          ) : null}
 
           {error && <p className="text-sm font-medium text-red-500">{error}</p>}
 

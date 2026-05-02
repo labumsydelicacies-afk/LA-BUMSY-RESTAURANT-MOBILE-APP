@@ -60,7 +60,7 @@ def verify_schema():
     from sqlalchemy import inspect
     inspector = inspect(engine)
     columns = [col['name'] for col in inspector.get_columns('users')]
-    required_cols = ['phone', 'address', 'is_email_verified', 'is_phone_verified', 'is_profile_complete']
+    required_cols = ['phone', 'address', 'first_name', 'last_name', 'is_email_verified', 'is_profile_complete']
     missing = [c for c in required_cols if c not in columns]
     if missing:
         logger.error(f"SCHEMA MISMATCH DETECTED: Missing columns in users table: {missing}. Run migrations!")

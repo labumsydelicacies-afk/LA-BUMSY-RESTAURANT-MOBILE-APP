@@ -112,7 +112,7 @@ def notify_ready_for_pickup(db: Session, order_id: int) -> None:
 def notify_order_assigned(
     db: Session,
     order_id: int,
-    rider_nickname: str,
+    rider_name: str,
     user_email: str,
 ) -> None:
     """
@@ -123,13 +123,13 @@ def notify_order_assigned(
     subject = f"Order #{order_id} assigned to a rider"
 
     admin_body = (
-        f"Order #{order_id} has been accepted by rider '{rider_nickname}'.\n"
+        f"Order #{order_id} has been accepted by rider '{rider_name}'.\n"
         "The order is now out for collection."
     )
     admin_html = get_standard_notification_html("Order Assigned", admin_body)
     
     user_body = (
-        f"Good news! Your order #{order_id} has been assigned to a rider ({rider_nickname}).\n"
+        f"Good news! Your order #{order_id} has been assigned to a rider ({rider_name}).\n"
         "They will collect it shortly and head your way."
     )
     user_html = get_standard_notification_html("Rider Assigned!", user_body)

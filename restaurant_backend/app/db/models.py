@@ -22,6 +22,8 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     nickname: Mapped[str | None] = mapped_column(String, unique=True, index=True, nullable=True)
+    first_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    last_name: Mapped[str | None] = mapped_column(String, nullable=True)
 
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     is_rider: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -40,6 +42,18 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan"
     )
+
+    @property
+    def display_name(self) -> str:
+        if self.is_rider:
+            full_name = " ".join(part for part in [self.first_name, self.last_name] if part).strip()
+            if full_name:
+                return full_name
+        if self.nickname:
+            return self.nickname
+        if self.first_name or self.last_name:
+            return " ".join(part for part in [self.first_name, self.last_name] if part).strip()
+        return self.email
 
 
 

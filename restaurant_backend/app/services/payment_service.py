@@ -27,6 +27,7 @@ from app.config import (
 )
 from app.db.models import Order, User
 from app.services.notification_service import notify_order_created
+from app.services.user_service import get_user_display_name
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +104,7 @@ def initialize_payment(order: Order, user: User, payment_options: str = "banktra
         try:
             client.post(
                 f"{FLUTTERWAVE_BASE_URL}/customers",
-                json={"email": user.email, "name": user.nickname},
+                json={"email": user.email, "name": get_user_display_name(user)},
                 headers=headers
             )
         except Exception as e:
@@ -116,7 +117,7 @@ def initialize_payment(order: Order, user: User, payment_options: str = "banktra
             "currency": "NGN",
             "payment_options": normalized_payment_option,
             "redirect_url": callback_url,
-            "customer": {"email": user.email, "name": user.nickname},
+            "customer": {"email": user.email, "name": get_user_display_name(user)},
         }
 
         # Enhance logging with sanitized payload

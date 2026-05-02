@@ -3,6 +3,12 @@ import axiosInstance from "../../api/axiosInstance";
 import Navbar from "../../components/Navbar";
 import BottomNav from "../../components/BottomNav";
 
+function getDisplayName(user) {
+  const firstLast = [user.first_name, user.last_name].filter(Boolean).join(" ").trim();
+  if (user.is_rider && firstLast) return firstLast;
+  return user.display_name || user.nickname || firstLast || user.email;
+}
+
 // ─── Role Badge ──────────────────────────────────────────────────────────────
 function RoleBadge({ label, active, color }) {
   const colors = {
@@ -59,11 +65,12 @@ function RoleSwitcher({ user, onUpdate, busy }) {
 
 // ─── User Card ───────────────────────────────────────────────────────────────
 function UserCard({ user, onUpdate, busy }) {
+  const displayName = getDisplayName(user);
   return (
     <article className="rounded-2xl bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.05)] border border-gray-100">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate font-heading text-sm font-black text-gray-900">@{user.nickname}</p>
+          <p className="truncate font-heading text-sm font-black text-gray-900">{displayName}</p>
           <p className="truncate text-xs text-gray-400">{user.email}</p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-1 justify-end">
@@ -118,8 +125,12 @@ export default function AdminUsers() {
 
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
+    const displayName = getDisplayName(u).toLowerCase();
     return (
+      displayName.includes(q) ||
       u.nickname?.toLowerCase().includes(q) ||
+      u.first_name?.toLowerCase().includes(q) ||
+      u.last_name?.toLowerCase().includes(q) ||
       u.email?.toLowerCase().includes(q)
     );
   });

@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.db.models import User
 from app.schemas.user import RoleUpdateRequest, UserResponse
-from app.services.user_service import get_all_users, get_user_by_id
+from app.services.user_service import get_all_users, get_user_by_id, is_profile_complete_for_user
 from app.utils.security import get_current_admin_user
 
 logger = logging.getLogger(__name__)
@@ -61,6 +61,7 @@ def update_user_role(
 
     user.is_admin = payload.is_admin
     user.is_rider = payload.is_rider
+    user.is_profile_complete = is_profile_complete_for_user(user)
     db.commit()
     db.refresh(user)
 

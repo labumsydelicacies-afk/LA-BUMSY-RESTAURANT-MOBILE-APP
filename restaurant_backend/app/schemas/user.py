@@ -20,12 +20,16 @@ class UserCreate(UserBase):
     role: Literal["customer", "rider"] = "customer"
 
 class ProfileCompleteRequest(BaseModel):
-    nickname: str
-    phone: str
-    address: str
+    nickname: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    phone: str | None = None
+    address: str | None = None
 
 class ProfileUpdateRequest(BaseModel):
     nickname: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
     phone: str | None = None
     address: str | None = None
 
@@ -43,6 +47,9 @@ class UserResponse(UserBase):
     is_profile_complete: bool
     created_at: datetime
     nickname: str | None
+    first_name: str | None
+    last_name: str | None
+    display_name: str
     phone: str | None
     address: str | None
     class Config:

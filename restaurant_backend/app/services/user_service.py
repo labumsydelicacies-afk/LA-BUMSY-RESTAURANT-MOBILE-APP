@@ -48,6 +48,40 @@ def get_all_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
         raise
 
 
+def get_user_display_name(user: User) -> str:
+    if user.is_rider:
+        full_name = " ".join(part for part in [user.first_name, user.last_name] if part).strip()
+        if full_name:
+            return full_name
+    if user.nickname:
+        return user.nickname
+    if user.first_name or user.last_name:
+        return " ".join(part for part in [user.first_name, user.last_name] if part).strip()
+    return user.email
+
+
+def is_profile_complete_for_user(
+    user: User,
+    *,
+    nickname: str | None = None,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    phone: str | None = None,
+    address: str | None = None,
+) -> bool:
+    nickname = user.nickname if nickname is None else nickname
+    first_name = user.first_name if first_name is None else first_name
+    last_name = user.last_name if last_name is None else last_name
+    phone = user.phone if phone is None else phone
+    address = user.address if address is None else address
+
+    if user.is_admin:
+        return True
+    if user.is_rider:
+        return bool(first_name and last_name and phone and address)
+    return bool(nickname and phone and address)
+
+
 # ------------------- WRITE OPERATIONS ------------------- #
 
 def create_user(db: Session, user_data: UserCreate) -> User:
