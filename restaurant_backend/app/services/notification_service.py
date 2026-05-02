@@ -185,3 +185,35 @@ def notify_order_delivered(db: Session, order_id: int, user_email: str) -> None:
         _safe_send(admin.email, subject, admin_body, admin_html)
 
     logger.info("Delivery-complete notifications sent for order #%s", order_id)
+
+# ─── SMS delivery ──────────────────────────────────────────────────────────
+
+def send_sms_async(phone_number: str, otp: str) -> None:
+    """
+    Sends an SMS OTP. 
+    Logs request and response. Falls back to mock logging if no provider configured.
+    """
+    import os
+    import httpx
+
+    logger.info("SMS request sent | to=%s | otp=%s", phone_number, otp)
+    
+    sms_api_key = os.getenv("SMS_API_KEY")
+    sms_api_url = os.getenv("SMS_API_URL")
+    
+    if sms_api_key and sms_api_url:
+        try:
+            with httpx.Client(timeout=10) as client:
+                response = client.post(
+                    sms_api_url,
+                    json={"to": phone_number, "message": f"Your La Bumsy verification code is {otp}"},
+                    headers={"Authorization": f"Bearer {sms_api_key}"}
+                )
+                response.raise_for_status()
+                logger.info("SMS response success | to=%s | status=%s", phone_number, response.status_code)
+        except Exception as e:
+            logger.error("SMS API failure | to=%s | error=%s", phone_number, str(e))
+    else:
+        # Mock behavior
+        logger.warning("No SMS_API_KEY configured. Mocking SMS delivery.")
+        logger.info("SMS response success (MOCK) | to=%s", phone_number)

@@ -220,12 +220,8 @@ def verify(
     db.commit()
     db.refresh(order)
 
-    # Fire notification (webhook may not have fired yet)
-    from app.services.notification_service import notify_order_created
-    try:
-        notify_order_created(db, order.id, current_user.email, order.total_price)
-    except Exception:
-        logger.exception("Failed to send order notification for order #%s", order.id)
+    # We rely entirely on the webhook to send notifications and emails
+    # to avoid duplicate receipts and premature emails.
 
     return VerifyPaymentResponse(
         paid=True,

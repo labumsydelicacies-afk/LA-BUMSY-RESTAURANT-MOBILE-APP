@@ -37,10 +37,7 @@ def place_order(
     """
     try:
         order = create_order(db, current_user.id, order_data)
-        # Notify admins + all riders that a new order is available
-        background_tasks.add_task(
-            notify_order_created, db, order.id, current_user.email, order.total_price
-        )
+        # Notification will be fired upon successful payment verification.
         return order
     except ValueError as exc:
         raise HTTPException(
