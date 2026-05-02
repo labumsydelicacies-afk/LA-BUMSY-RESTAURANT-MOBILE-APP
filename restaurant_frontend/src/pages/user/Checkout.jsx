@@ -5,23 +5,24 @@ import Navbar from "../../components/Navbar";
 import BottomNav from "../../components/BottomNav";
 import { useCartStore } from "../../stores/cartStore";
 
+const PAYMENT_METHOD = "banktransfer";
+
 export default function Checkout() {
   const navigate = useNavigate();
   const items = useCartStore((state) => state.items);
 
   const total = items.reduce((acc, item) => acc + Number(item.price || 0) * item.quantity, 0);
   const [loading, setLoading] = useState(false);
-  const [loadingStep, setLoadingStep] = useState(""); // "creating" | "redirecting"
+  const [loadingStep, setLoadingStep] = useState("");
   const [error, setError] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("banktransfer");
 
   const handleCheckout = async () => {
     if (!items.length) return;
+
     try {
       setLoading(true);
       setError("");
 
-      // ── Step 1: Create the order (status = pending_payment) ──────────────
       setLoadingStep("creating");
       const orderPayload = {
         items: items.map((item) => ({
@@ -31,18 +32,13 @@ export default function Checkout() {
       };
       const { data: order } = await axiosInstance.post("/orders", orderPayload);
 
-      // ── Step 2: Initialize Flutterwave payment session ───────────────────
       setLoadingStep("redirecting");
       const { data: paymentData } = await axiosInstance.post("/payments/initialize", {
         order_id: order.id,
-        payment_options: paymentMethod,
+        payment_options: PAYMENT_METHOD,
       });
 
-      // ── Step 3: Hard-redirect to Flutterwave hosted payment page ─────────
-      // Cart is cleared on the callback page after payment is confirmed,
-      // NOT here — preserving it in case the user abandons payment.
       window.location.href = paymentData.payment_link;
-
     } catch (err) {
       setError(err.response?.data?.detail || "Could not start payment. Please try again.");
       setLoading(false);
@@ -73,8 +69,6 @@ export default function Checkout() {
           </div>
         ) : (
           <div className="space-y-6">
-
-            {/* Order Items Preview */}
             <div className="rounded-3xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 relative overflow-hidden">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-heading text-xl font-bold text-gray-900">Order Summary</h2>
@@ -90,7 +84,7 @@ export default function Checkout() {
                       <span className="font-medium text-gray-700 truncate max-w-[180px]">{item.name}</span>
                     </div>
                     <span className="font-bold text-gray-900">
-                      ₦{(Number(item.price) * item.quantity).toLocaleString()}
+                      N{(Number(item.price) * item.quantity).toLocaleString()}
                     </span>
                   </li>
                 ))}
@@ -98,50 +92,42 @@ export default function Checkout() {
               <div className="border-t border-dashed border-gray-200 pt-4 mt-4">
                 <p className="text-sm font-semibold text-gray-500 mb-1">Total to Pay</p>
                 <p className="font-heading text-3xl font-black text-brandRed">
-                  ₦{total.toLocaleString()}
+                  N{total.toLocaleString()}
                 </p>
               </div>
             </div>
 
-            {/* Payment Method Badge */}
             <div className="rounded-3xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brandCream text-brandRed">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
                   </svg>
                 </div>
                 <div>
                   <h3 className="font-heading text-lg font-bold text-gray-900">Payment Method</h3>
-                  <p className="text-xs font-medium text-gray-500">Select how you'd like to pay</p>
+                  <p className="text-xs font-medium text-gray-500">Continue to Flutterwave to complete payment</p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("banktransfer")}
-                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${paymentMethod === 'banktransfer' ? 'border-green-500 bg-green-50/50 scale-[0.98]' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'}`}
-                >
-                  <div className="text-3xl mb-2">🏦</div>
-                  <span className={`text-sm font-bold ${paymentMethod === 'banktransfer' ? 'text-green-700' : 'text-gray-600'}`}>Bank Transfer</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("opay")}
-                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${paymentMethod === 'opay' ? 'border-blue-500 bg-blue-50/50 scale-[0.98]' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'}`}
-                >
-                  <div className="text-3xl mb-2">📱</div>
-                  <span className={`text-sm font-bold ${paymentMethod === 'opay' ? 'text-blue-700' : 'text-gray-600'}`}>OPay</span>
-                </button>
+              <div className="rounded-2xl border-2 border-green-500 bg-green-50/50 p-4">
+                <div className="flex items-center justify-center gap-3">
+                  <div className="text-center">
+                    <p className="text-sm font-bold text-green-700">Click here to make payment</p>
+                    <p className="text-xs font-medium text-green-700/80">
+                      You will be redirected to Flutterwave to complete your payment.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Delivery Info */}
             <div className="rounded-3xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brandCream text-brandRed">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" />
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
                   </svg>
                 </div>
                 <div>
@@ -151,14 +137,12 @@ export default function Checkout() {
               </div>
             </div>
 
-            {/* Error */}
             {error && (
               <div className="rounded-2xl bg-red-50 p-4 text-center text-sm font-semibold text-red-600 border border-red-100 animate-pulse">
                 {error}
               </div>
             )}
 
-            {/* CTA */}
             <div className="pt-4">
               <button
                 id="checkout-pay-btn"
@@ -176,21 +160,22 @@ export default function Checkout() {
                   </span>
                 ) : (
                   <>
-                    Pay Now — ₦{total.toLocaleString()}
+                    Pay Now - N{total.toLocaleString()}
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="absolute right-6 transition-transform duration-300 group-hover:translate-x-1">
-                      <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
                     </svg>
                   </>
                 )}
               </button>
               <p className="text-center text-xs text-gray-400 mt-4 font-medium flex items-center justify-center gap-1">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                Secure payment via Flutterwave · Bank Transfer &amp; OPay only
+                Secure payment via Flutterwave
               </p>
             </div>
-
           </div>
         )}
       </section>

@@ -9,7 +9,7 @@ Handles all Flutterwave payment operations:
   - Webhook signature validation (HMAC SHA-512)
   - Webhook event dispatching with full idempotency guard
 
-Payment methods enabled: Bank Transfer, Opay only.
+Payment method enabled: Bank Transfer only.
 Card payments are explicitly excluded via payment_options.
 """
 
@@ -30,7 +30,7 @@ from app.services.notification_service import notify_order_created
 
 logger = logging.getLogger(__name__)
 
-ALLOWED_PAYMENT_OPTIONS = {"banktransfer", "opay"}
+ALLOWED_PAYMENT_OPTIONS = {"banktransfer"}
 
 
 # ─── Reference generation ───────────────────────────────────────────────────
@@ -49,8 +49,11 @@ def generate_tx_ref(order_id: int) -> str:
 
 def normalize_payment_option(payment_option: str | None) -> str:
     normalized = (payment_option or "banktransfer").strip().lower()
+    if normalized == "opay":
+        logger.info("Received legacy 'opay' payment option; falling back to bank transfer")
+        return "banktransfer"
     if normalized not in ALLOWED_PAYMENT_OPTIONS:
-        raise ValueError("Payment method must be either 'banktransfer' or 'opay'")
+        raise ValueError("Payment method must be 'banktransfer'")
     return normalized
 
 
