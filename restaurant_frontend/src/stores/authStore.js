@@ -25,14 +25,18 @@ export const useAuthStore = create((set, get) => ({
   user: null,
   role: null,
   isAuthenticated: false,
+  hasHydrated: false,
 
   initialize: () => {
     const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!token) {
+      set({ token: null, user: null, role: null, isAuthenticated: false, hasHydrated: true });
+      return;
+    }
     const payload = decodeJwt(token);
     if (!payload || (payload.exp && payload.exp * 1000 < Date.now())) {
       localStorage.removeItem("token");
-      set({ token: null, user: null, role: null, isAuthenticated: false });
+      set({ token: null, user: null, role: null, isAuthenticated: false, hasHydrated: true });
       return;
     }
     set({
@@ -47,6 +51,7 @@ export const useAuthStore = create((set, get) => ({
       },
       role: mapRole(payload.role),
       isAuthenticated: true,
+      hasHydrated: true,
     });
   },
 

@@ -110,11 +110,7 @@ export default function App() {
           />
           <Route
             path="/payment/callback"
-            element={
-              <ProtectedRoute allowedRoles={["user"]}>
-                <PaymentCallback />
-              </ProtectedRoute>
-            }
+            element={<PaymentCallback />}
           />
 
           <Route
