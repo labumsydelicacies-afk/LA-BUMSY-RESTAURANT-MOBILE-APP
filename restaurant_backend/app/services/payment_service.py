@@ -75,7 +75,6 @@ def initialize_payment(order: Order, user: User, payment_options: str = "card,ba
         # C. Charge Creation
         charge_payload = {
             "tx_ref": reference,       # Required by Flutterwave
-            "email": user.email,       # Required by Flutterwave
             "amount": order.total_price,
             "currency": "NGN",
             "payment_options": payment_options,
@@ -94,7 +93,7 @@ def initialize_payment(order: Order, user: User, payment_options: str = "card,ba
         )
 
         response = client.post(
-            f"{FLUTTERWAVE_BASE_URL}/charges",
+            f"{FLUTTERWAVE_BASE_URL}/payments",
             json=charge_payload,
             headers=headers,
         )
@@ -102,16 +101,13 @@ def initialize_payment(order: Order, user: User, payment_options: str = "card,ba
 
         if response.status_code >= 400:
             message = data.get("message", "Unknown error")
-            logger.error("Charge initialization failed for order #%s: %s", order.id, message)
+            logger.error("Payment initialization failed for order #%s: %s", order.id, message)
             raise ValueError(f"Payment initialization failed: {message}")
 
-        # Extract next_action.redirect_url.url
-        try:
-            payment_link = data["next_action"]["redirect_url"]["url"]
-        except KeyError:
-            payment_link = data.get("redirect_url") or data.get("data", {}).get("link", callback_url)
+        # Extract payment link from Standard Checkout response
+        payment_link = data.get("data", {}).get("link", callback_url)
 
-        charge_id = data.get("id") or data.get("data", {}).get("id")
+        charge_id = data.get("data", {}).get("id")
 
         logger.info("Payment initialized successfully | order_id=%s | tx_ref=%s", order.id, reference)
 
@@ -127,7 +123,7 @@ def verify_payment(transaction_id: str | int, expected_amount: float) -> dict | 
 
     with httpx.Client(timeout=30) as client:
         response = client.get(
-            f"{FLUTTERWAVE_BASE_URL}/charges/{transaction_id}",
+            f"{FLUTTERWAVE_BASE_URL}/transactions/{transaction_id}/verify",
             headers=headers,
         )
 
