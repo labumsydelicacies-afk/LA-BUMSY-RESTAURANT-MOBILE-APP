@@ -44,122 +44,102 @@ def generate_tx_ref(order_id: int) -> str:
 
 # ─── Payment initialisation ─────────────────────────────────────────────────
 
-def initialize_payment(order: Order, user: User, payment_method: str = "banktransfer,opay") -> dict:
-    """
-    Calls Flutterwave's POST /payments endpoint to create a hosted payment link.
-
-    Payment methods are restricted to:
-      - banktransfer  (standard Nigerian bank transfer)
-      - opay          (OPay mobile money / wallet)
-
-    Card payments are deliberately NOT listed in payment_options.
-
-    Returns:
-        {
-            "payment_link": str,  # redirect the user here
-            "tx_ref":       str,  # stored on the order for reconciliation
-        }
-
-    Raises:
-        ValueError: if the Flutterwave API responds with a failure status.
-        httpx.HTTPError: on network-level failures.
-    """
-    tx_ref = generate_tx_ref(order.id)
+def initialize_payment(order: Order, user: User, payment_method: str = "opay") -> dict:
+    reference = generate_tx_ref(order.id)
     callback_url = f"{FRONTEND_URL}/payment/callback"
-
-    payload = {
-        "tx_ref": tx_ref,
-        "amount": order.total_price,
-        "currency": "NGN",
-        "redirect_url": callback_url,
-        # ── Restrict to selected method only ──────────────────────
-        "payment_options": payment_method,
-        # ───────────────────────────────────────────────────────────
-        "customer": {
-            "email": user.email,
-        },
-        "customizations": {
-            "title": "La Bumsy Delicacies",
-            "description": f"Payment for Order #{order.id}",
-        },
-        "meta": {
-            "order_id": order.id,
-        },
-    }
 
     headers = {
         "Authorization": f"Bearer {FLUTTERWAVE_SECRET_KEY}",
         "Content-Type": "application/json",
+        "X-Idempotency-Key": f"init_{reference}"
     }
 
     with httpx.Client(timeout=30) as client:
+        # A. Customer Handling
+        try:
+            client.post(
+                f"{FLUTTERWAVE_BASE_URL}/customers",
+                json={"email": user.email, "name": user.nickname},
+                headers=headers
+            )
+        except Exception as e:
+            logger.warning("Customer creation ignored: %s", e)
+
+        # B. Payment Method
+        try:
+            client.post(
+                f"{FLUTTERWAVE_BASE_URL}/payment_methods",
+                json={"type": payment_method, "customer": user.email},
+                headers=headers
+            )
+        except Exception as e:
+            logger.warning("Payment method creation ignored: %s", e)
+
+        # C. Charge Creation
+        charge_payload = {
+            "amount": order.total_price,
+            "currency": "NGN",
+            "reference": reference,
+            "payment_method": payment_method,
+            "customer": {"email": user.email},
+            "redirect_url": callback_url,
+        }
+
         response = client.post(
-            f"{FLUTTERWAVE_BASE_URL}/payments",
-            json=payload,
+            f"{FLUTTERWAVE_BASE_URL}/charges",
+            json=charge_payload,
             headers=headers,
         )
+        data = response.json()
 
-    data = response.json()
+        if response.status_code >= 400:
+            message = data.get("message", "Unknown error")
+            logger.error("Charge initialization failed for order #%s: %s", order.id, message)
+            raise ValueError(f"Payment initialization failed: {message}")
 
-    if data.get("status") != "success":
-        message = data.get("message", "Unknown Flutterwave error")
-        logger.error("Flutterwave initialization failed for order #%s: %s", order.id, message)
-        raise ValueError(f"Payment initialization failed: {message}")
+        # Extract next_action.redirect_url.url
+        try:
+            payment_link = data["next_action"]["redirect_url"]["url"]
+        except KeyError:
+            payment_link = data.get("redirect_url") or data.get("data", {}).get("link", callback_url)
 
-    payment_link = data["data"]["link"]
-    logger.info("Payment initialized for order #%s | tx_ref=%s", order.id, tx_ref)
+        charge_id = data.get("id") or data.get("data", {}).get("id")
 
-    return {"payment_link": payment_link, "tx_ref": tx_ref}
+        logger.info("Payment initialized for order #%s | reference=%s", order.id, reference)
+
+    return {"payment_link": payment_link, "tx_ref": reference, "charge_id": charge_id}
 
 
 # ─── Server-side verification ────────────────────────────────────────────────
 
 def verify_payment(transaction_id: str | int, expected_amount: float) -> dict | None:
-    """
-    Independently verifies a Flutterwave transaction via their server API.
-
-    IMPORTANT: This is ALWAYS called before accepting a payment — we never
-    trust what the frontend or webhook payload claims without server confirmation.
-
-    Checks:
-      - data.status == "successful"
-      - data.amount >= expected_amount  (in Naira, not kobo)
-      - data.currency == "NGN"
-
-    Returns:
-        The full Flutterwave transaction data dict on success, or None on failure.
-    """
     headers = {
         "Authorization": f"Bearer {FLUTTERWAVE_SECRET_KEY}",
     }
 
     with httpx.Client(timeout=30) as client:
         response = client.get(
-            f"{FLUTTERWAVE_BASE_URL}/transactions/{transaction_id}/verify",
+            f"{FLUTTERWAVE_BASE_URL}/charges/{transaction_id}",
             headers=headers,
         )
 
     data = response.json()
 
-    if data.get("status") != "success":
-        logger.warning("Flutterwave verify returned non-success for tx %s: %s", transaction_id, data)
+    # The prompt explicitly requires checking for "succeeded"
+    tx_status = data.get("status") or data.get("data", {}).get("status", "")
+    if tx_status != "succeeded":
+        logger.warning("Transaction %s status is '%s', not 'succeeded'", transaction_id, tx_status)
         return None
 
-    tx_data = data.get("data", {})
-    tx_status = tx_data.get("status", "")
-    tx_amount = float(tx_data.get("amount", 0))
-    tx_currency = tx_data.get("currency", "")
-
-    if tx_status != "successful":
-        logger.warning("Transaction %s status is '%s', not 'successful'", transaction_id, tx_status)
-        return None
+    # Amount extraction handling root or nested data
+    tx_amount = float(data.get("amount", data.get("data", {}).get("amount", 0)))
+    tx_currency = data.get("currency", data.get("data", {}).get("currency", ""))
 
     if tx_currency != "NGN":
         logger.warning("Transaction %s currency mismatch: got %s", transaction_id, tx_currency)
         return None
 
-    # Amount check: Flutterwave returns amounts in Naira (not kobo).
-    # We allow a ₦1 tolerance for floating-point rounding.
+    # Amount check: We allow a ₦1 tolerance for floating-point rounding.
     if tx_amount < (expected_amount - 1):
         logger.warning(
             "Amount mismatch for tx %s: expected ₦%.2f, got ₦%.2f",
@@ -168,7 +148,7 @@ def verify_payment(transaction_id: str | int, expected_amount: float) -> dict | 
         return None
 
     logger.info("Transaction %s verified successfully | amount=₦%.2f", transaction_id, tx_amount)
-    return tx_data
+    return data.get("data", data)
 
 
 # ─── Webhook signature validation ───────────────────────────────────────────
@@ -222,26 +202,28 @@ def handle_webhook(payload: dict, verif_hash: str | None, db) -> dict:
         return {"processed": False, "reason": "invalid_signature"}
 
     # ── Step 2: Filter event type ────────────────────────────────
-    event = payload.get("event", "")
-    if event != "charge.completed":
-        logger.info("Ignoring webhook event type: %s", event)
-        return {"processed": False, "reason": "ignored_event", "event": event}
+    event_type = payload.get("type") or payload.get("event")
+    if event_type != "charge.completed":
+        logger.info("Ignoring webhook event type: %s", event_type)
+        return {"processed": False, "reason": "ignored_event", "type": event_type}
 
     event_data = payload.get("data", {})
     transaction_id = str(event_data.get("id", ""))
-    tx_ref = event_data.get("tx_ref", "")
+    
+    # Prompt explicitly requests using 'reference'
+    tx_ref = event_data.get("reference") or event_data.get("tx_ref", "")
 
     if not tx_ref:
-        logger.warning("Webhook payload missing tx_ref")
-        return {"processed": False, "reason": "missing_tx_ref"}
+        logger.warning("Webhook payload missing reference")
+        return {"processed": False, "reason": "missing_reference"}
 
     # ── Step 3: Find the order ───────────────────────────────────
     from app.db.models import Order as OrderModel  # local import avoids circulars
     order = db.query(OrderModel).filter(OrderModel.payment_reference == tx_ref).first()
 
     if order is None:
-        logger.warning("Webhook received for unknown tx_ref: %s", tx_ref)
-        return {"processed": False, "reason": "order_not_found", "tx_ref": tx_ref}
+        logger.warning("Webhook received for unknown reference: %s", tx_ref)
+        return {"processed": False, "reason": "order_not_found", "reference": tx_ref}
 
     # ── Step 4: IDEMPOTENCY — never double-process ───────────────
     if order.payment_status == "paid":

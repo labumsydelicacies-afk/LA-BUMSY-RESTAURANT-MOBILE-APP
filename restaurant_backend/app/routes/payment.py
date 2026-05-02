@@ -105,6 +105,8 @@ def initialize(
 
     # Persist the tx_ref on the order so the webhook can find it later.
     order.payment_reference = result["tx_ref"]
+    if result.get("charge_id"):
+        order.external_transaction_id = str(result["charge_id"])
     db.commit()
 
     logger.info(
