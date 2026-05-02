@@ -46,6 +46,13 @@ def generate_tx_ref(order_id: int) -> str:
 
 def initialize_payment(order: Order, user: User, payment_method: str = "opay") -> dict:
     reference = generate_tx_ref(order.id)
+    
+    # Mandatory defensive validation before any API calls
+    if not user.email:
+        raise ValueError("User email is required for payment initialization")
+    if not reference:
+        raise ValueError("tx_ref is required for payment initialization")
+
     callback_url = f"{FRONTEND_URL}/payment/callback"
 
     headers = {
@@ -77,13 +84,25 @@ def initialize_payment(order: Order, user: User, payment_method: str = "opay") -
 
         # C. Charge Creation
         charge_payload = {
+            "tx_ref": reference,       # Required by Flutterwave
+            "email": user.email,       # Required by Flutterwave
             "amount": order.total_price,
             "currency": "NGN",
-            "reference": reference,
-            "payment_method": payment_method,
-            "customer": {"email": user.email},
+            "payment_options": payment_method,
+            "payment_method": payment_method, # Added for fallback compatibility
             "redirect_url": callback_url,
+            "customer": {"email": user.email, "name": user.nickname},
         }
+
+        # Enhance logging with sanitized payload
+        sanitized_payload = {**charge_payload}
+        sanitized_payload["email"] = "***"
+        sanitized_payload["customer"] = {"email": "***", "name": "***"}
+
+        logger.info(
+            "Initializing payment | order_id=%s | tx_ref=%s | user_email=%s | payload=%s", 
+            order.id, reference, user.email, sanitized_payload
+        )
 
         response = client.post(
             f"{FLUTTERWAVE_BASE_URL}/charges",
@@ -105,7 +124,7 @@ def initialize_payment(order: Order, user: User, payment_method: str = "opay") -
 
         charge_id = data.get("id") or data.get("data", {}).get("id")
 
-        logger.info("Payment initialized for order #%s | reference=%s", order.id, reference)
+        logger.info("Payment initialized successfully | order_id=%s | tx_ref=%s", order.id, reference)
 
     return {"payment_link": payment_link, "tx_ref": reference, "charge_id": charge_id}
 
