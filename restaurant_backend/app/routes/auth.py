@@ -17,8 +17,6 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     TokenResponse,
     VerifyOtpRequest,
-    SendPhoneOtpRequest,
-    VerifyPhoneOtpRequest,
 )
 from app.schemas.user import UserCreate
 from app.utils.security import get_current_user
@@ -246,28 +244,4 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
     }
 
 
-@router.post("/send-phone-otp")
-def send_phone_otp(
-    payload: SendPhoneOtpRequest,
-    background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    from app.services.notification_service import send_sms_async
-    otp = create_otp(db, current_user.id)
-    logger.info("OTP generated for phone verification: user_id=%s, phone=%s", current_user.id, payload.phone)
-    background_tasks.add_task(send_sms_async, payload.phone, otp)
-    return {"success": True, "message": "OTP sent to phone"}
 
-@router.post("/verify-phone-otp")
-def verify_phone_otp(payload: VerifyPhoneOtpRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if not consume_otp_for_user(db, current_user.id, payload.otp):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired OTP")
-    
-    db_user = db.query(User).filter(User.id == current_user.id).first()
-    
-    db_user.is_phone_verified = True
-    if db_user.phone != payload.phone:
-        db_user.phone = payload.phone
-    db.commit()
-    return {"success": True, "message": "Phone verified successfully"}

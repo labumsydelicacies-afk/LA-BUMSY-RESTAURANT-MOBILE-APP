@@ -129,10 +129,10 @@ def verify_payment(transaction_id: str | int, expected_amount: float) -> dict | 
 
     data = response.json()
 
-    # The prompt explicitly requires checking for "succeeded"
-    tx_status = data.get("status") or data.get("data", {}).get("status", "")
-    if tx_status != "succeeded":
-        logger.warning("Transaction %s status is '%s', not 'succeeded'", transaction_id, tx_status)
+    # The prompt explicitly requires checking for "successful"
+    tx_status = data.get("data", {}).get("status", "")
+    if tx_status != "successful":
+        logger.warning("Transaction %s status is '%s', not 'successful'", transaction_id, tx_status)
         return None
 
     # Amount extraction handling root or nested data

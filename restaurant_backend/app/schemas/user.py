@@ -40,7 +40,6 @@ class UserResponse(UserBase):
     is_admin: bool
     is_rider: bool
     is_email_verified: bool
-    is_phone_verified: bool
     is_profile_complete: bool
     created_at: datetime
     nickname: str | None
