@@ -130,14 +130,15 @@ def verify_payment(transaction_id: str | int, expected_amount: float) -> dict | 
     data = response.json()
 
     # The prompt explicitly requires checking for "successful"
-    tx_status = data.get("data", {}).get("status", "")
+    tx_data = data.get("data") or {}
+    tx_status = tx_data.get("status", "")
     if tx_status != "successful":
         logger.warning("Transaction %s status is '%s', not 'successful'", transaction_id, tx_status)
         return None
 
     # Amount extraction handling root or nested data
-    tx_amount = float(data.get("amount", data.get("data", {}).get("amount", 0)))
-    tx_currency = data.get("currency", data.get("data", {}).get("currency", ""))
+    tx_amount = float(data.get("amount", tx_data.get("amount", 0)))
+    tx_currency = data.get("currency", tx_data.get("currency", ""))
 
     if tx_currency != "NGN":
         logger.warning("Transaction %s currency mismatch: got %s", transaction_id, tx_currency)
