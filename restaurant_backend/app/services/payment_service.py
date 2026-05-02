@@ -44,7 +44,7 @@ def generate_tx_ref(order_id: int) -> str:
 
 # ─── Payment initialisation ─────────────────────────────────────────────────
 
-def initialize_payment(order: Order, user: User, payment_method: str = "opay") -> dict:
+def initialize_payment(order: Order, user: User, payment_options: str = "card,banktransfer") -> dict:
     reference = generate_tx_ref(order.id)
     
     # Mandatory defensive validation before any API calls
@@ -72,24 +72,13 @@ def initialize_payment(order: Order, user: User, payment_method: str = "opay") -
         except Exception as e:
             logger.warning("Customer creation ignored: %s", e)
 
-        # B. Payment Method
-        try:
-            client.post(
-                f"{FLUTTERWAVE_BASE_URL}/payment_methods",
-                json={"type": payment_method, "customer": user.email},
-                headers=headers
-            )
-        except Exception as e:
-            logger.warning("Payment method creation ignored: %s", e)
-
         # C. Charge Creation
         charge_payload = {
             "tx_ref": reference,       # Required by Flutterwave
             "email": user.email,       # Required by Flutterwave
             "amount": order.total_price,
             "currency": "NGN",
-            "payment_options": payment_method,
-            "payment_method": payment_method, # Added for fallback compatibility
+            "payment_options": payment_options,
             "redirect_url": callback_url,
             "customer": {"email": user.email, "name": user.nickname},
         }

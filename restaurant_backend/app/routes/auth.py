@@ -17,8 +17,12 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     TokenResponse,
     VerifyOtpRequest,
+    SendPhoneOtpRequest,
+    VerifyPhoneOtpRequest,
 )
 from app.schemas.user import UserCreate
+from app.utils.security import get_current_user
+from app.db.models import User
 from app.services.auth_service import login_user
 from app.services.email_verification_service import (
     consume_otp_for_user,
@@ -145,7 +149,7 @@ def resend_otp(
     COOLDOWN_SECONDS = 30
 
     user = get_user_by_email(db, payload.email)
-    if not user or user.is_verified:
+    if not user or user.is_email_verified:
         return _SAFE_RESPONSE
 
     # Hard cap: max 5 resend attempts per 60-minute window.
@@ -240,3 +244,24 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
         "success": True,
         "message": "Password reset successful",
     }
+
+
+@router.post("/send-phone-otp")
+def send_phone_otp(payload: SendPhoneOtpRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Mock sending SMS. In a real app, use an SMS provider like Twilio.
+    logger.info(f"Sending mock SMS OTP to {payload.phone} for user {current_user.email}")
+    return {"success": True, "message": "OTP sent to phone"}
+
+@router.post("/verify-phone-otp")
+def verify_phone_otp(payload: VerifyPhoneOtpRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    # Mock OTP verification - assume "123456" is the valid OTP for testing
+    if payload.otp != "123456":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OTP")
+    
+    db_user = db.query(User).filter(User.id == current_user.id).first()
+    
+    db_user.is_phone_verified = True
+    if db_user.phone != payload.phone:
+        db_user.phone = payload.phone
+    db.commit()
+    return {"success": True, "message": "Phone verified successfully"}

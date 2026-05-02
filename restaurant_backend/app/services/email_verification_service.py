@@ -213,6 +213,6 @@ def verify_otp_for_user(session: Session, user_id: int, otp: str) -> bool:
     if user is None:
         return False
 
-    user.is_verified = True
+    user.is_email_verified = True
     session.commit()
     return True

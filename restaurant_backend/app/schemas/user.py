@@ -17,8 +17,17 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
-    nickname: str
     role: Literal["customer", "rider"] = "customer"
+
+class ProfileCompleteRequest(BaseModel):
+    nickname: str
+    phone: str
+    address: str
+
+class ProfileUpdateRequest(BaseModel):
+    nickname: str | None = None
+    phone: str | None = None
+    address: str | None = None
 
 
 class RoleUpdateRequest(BaseModel):
@@ -30,8 +39,12 @@ class UserResponse(UserBase):
     id: int
     is_admin: bool
     is_rider: bool
-    is_verified: bool
+    is_email_verified: bool
+    is_phone_verified: bool
+    is_profile_complete: bool
     created_at: datetime
-    nickname: str
+    nickname: str | None
+    phone: str | None
+    address: str | None
     class Config:
         from_attributes = True

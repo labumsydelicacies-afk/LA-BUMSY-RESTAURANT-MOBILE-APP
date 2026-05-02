@@ -20,7 +20,8 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     role: str
-    nickname: str
+    nickname: str | None
+    user_state: str = "ACTIVE" # "PROFILE_INCOMPLETE" | "ACTIVE"
 
 
 class VerifyOtpRequest(BaseModel):
@@ -48,3 +49,10 @@ class ResetPasswordRequest(BaseModel):
 
 class ResendOtpRequest(BaseModel):
     email: EmailStr
+
+class SendPhoneOtpRequest(BaseModel):
+    phone: str
+
+class VerifyPhoneOtpRequest(BaseModel):
+    phone: str
+    otp: str

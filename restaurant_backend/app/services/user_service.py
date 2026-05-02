@@ -61,19 +61,16 @@ def create_user(db: Session, user_data: UserCreate) -> User:
     existing_user = get_user_by_email(db, user_data.email)
     if existing_user:
         raise ValueError(f"User with email {user_data.email} already exists")
-    existing_nickname = db.query(User).filter(User.nickname == user_data.nickname).first()
-    if existing_nickname:
-        raise ValueError(f"User with nickname {user_data.nickname} already exists")
 
     try:
         hashed_password = hash_password(user_data.password)
         new_user = User(
             email=user_data.email,
             hashed_password=hashed_password,
-            nickname=user_data.nickname,
             is_admin=False,
             is_rider=(user_data.role == "rider"),
-            is_verified=False,
+            is_email_verified=False,
+            is_profile_complete=False,
         )
         db.add(new_user)
         db.commit()
@@ -82,12 +79,10 @@ def create_user(db: Session, user_data: UserCreate) -> User:
         return new_user
     except IntegrityError as e:
         db.rollback()
-        # Covers race conditions on unique constraints (email/nickname).
+        # Covers race conditions on unique constraints (email).
         error_text = str(getattr(e, "orig", e)).lower()
         if "email" in error_text:
             raise ValueError(f"User with email {user_data.email} already exists") from e
-        if "nickname" in error_text:
-            raise ValueError(f"User with nickname {user_data.nickname} already exists") from e
         raise ValueError("User already exists") from e
     except SQLAlchemyError as e:
         db.rollback()

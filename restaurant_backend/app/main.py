@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import CORS_ALLOW_ORIGIN_REGEX, CORS_ALLOW_ORIGINS
-from app.routes import auth, food, orders, delivery, admin_users, payment
+from app.routes import auth, food, orders, delivery, admin_users, payment, profile
 
 
 logging.basicConfig(
@@ -45,6 +45,7 @@ app.include_router(orders.router)
 app.include_router(delivery.router)
 app.include_router(admin_users.router)
 app.include_router(payment.router)
+app.include_router(profile.router)
 
 
 @app.get("/", tags=["Health"])
@@ -52,5 +53,16 @@ def health_check():
     """Check if the API is running."""
     return {"status": "ok", "message": "Restaurant API is running"}
 
+
+@app.on_event("startup")
+def verify_schema():
+    from app.db.database import engine
+    from sqlalchemy import inspect
+    inspector = inspect(engine)
+    columns = [col['name'] for col in inspector.get_columns('users')]
+    required_cols = ['phone', 'address', 'is_email_verified', 'is_phone_verified', 'is_profile_complete']
+    missing = [c for c in required_cols if c not in columns]
+    if missing:
+        logger.error(f"SCHEMA MISMATCH DETECTED: Missing columns in users table: {missing}. Run migrations!")
 
 logger.info("Restaurant API started successfully")

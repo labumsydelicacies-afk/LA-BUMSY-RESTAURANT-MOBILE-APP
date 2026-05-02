@@ -9,7 +9,7 @@ export default function Register() {
   const verifyOtp = useAuthStore((state) => state.verifyOtp);
   const resendOtp = useAuthStore((state) => state.resendOtp);
   const [selectedRole, setSelectedRole] = useState("customer");
-  const [form, setForm] = useState({ email: "", password: "", nickname: "" });
+  const [form, setForm] = useState({ email: "", password: "" });
   const [createdUser, setCreatedUser] = useState(null);
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
@@ -217,14 +217,7 @@ export default function Register() {
                   : "Accept and deliver orders in your area"}
               </p>
             </div>
-            <input
-              name="nickname"
-              placeholder="Nickname"
-              className="w-full box-border text-left rounded-xl border border-gray-200 px-4 py-3 outline-none transition focus:border-brandRed focus:ring-2 focus:ring-brandRed/20"
-              value={form.nickname}
-              onChange={handleChange}
-              required
-            />
+
             <input
               name="email"
               type="email"

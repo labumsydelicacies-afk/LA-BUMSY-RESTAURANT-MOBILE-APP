@@ -21,11 +21,17 @@ class User(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
-    nickname: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    nickname: Mapped[str | None] = mapped_column(String, unique=True, index=True, nullable=True)
 
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     is_rider: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    
+    phone: Mapped[str | None] = mapped_column(String, nullable=True)
+    address: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    is_email_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_phone_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_profile_complete: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
 
     orders = relationship("Order", back_populates="user", foreign_keys="Order.user_id")

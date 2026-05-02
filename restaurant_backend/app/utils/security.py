@@ -126,15 +126,12 @@ def get_user_email_from_token(token: str) -> str | None:
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 
-def _get_db():
-    # Lazy import so importing this module doesn't require DATABASE_URL.
-    from app.db.database import get_db as real_get_db
-    yield from real_get_db()
+from app.db.database import get_db
 
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(_bearer_scheme),
-    db: Session = Depends(_get_db),
+    db: Session = Depends(get_db),
 ):
     """
     FastAPI dependency that returns the authenticated User.

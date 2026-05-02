@@ -37,7 +37,14 @@ export const useAuthStore = create((set, get) => ({
     }
     set({
       token,
-      user: { email: payload.sub, id: payload.user_id, nickname: payload.nickname },
+      user: { 
+        email: payload.sub, 
+        id: payload.user_id, 
+        nickname: payload.nickname,
+        userState: payload.user_state || "ACTIVE",
+        phone: payload.phone || "",
+        address: payload.address || ""
+      },
       role: mapRole(payload.role),
       isAuthenticated: true,
     });
@@ -55,6 +62,9 @@ export const useAuthStore = create((set, get) => ({
         email: payload?.sub ?? email,
         id: payload?.user_id ?? null,
         nickname: data.nickname ?? payload?.nickname ?? "",
+        userState: data.user_state ?? payload?.user_state ?? "ACTIVE",
+        phone: data.phone ?? payload?.phone ?? "",
+        address: data.address ?? payload?.address ?? ""
       },
       isAuthenticated: true,
     });
@@ -91,5 +101,21 @@ export const useAuthStore = create((set, get) => ({
   logout: () => {
     localStorage.removeItem("token");
     set({ token: null, user: null, role: null, isAuthenticated: false });
+  },
+
+  completeProfile: async (payload) => {
+    const { data } = await axiosInstance.post("/profile/complete", payload);
+    set((state) => ({
+      user: { ...state.user, ...data, userState: "ACTIVE" }
+    }));
+    return data;
+  },
+
+  updateProfile: async (payload) => {
+    const { data } = await axiosInstance.post("/profile/update", payload);
+    set((state) => ({
+      user: { ...state.user, ...data }
+    }));
+    return data;
   },
 }));

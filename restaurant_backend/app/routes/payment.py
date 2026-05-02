@@ -37,7 +37,7 @@ router = APIRouter(prefix="/payments", tags=["Payments"])
 
 class InitializePaymentRequest(BaseModel):
     order_id: int
-    payment_method: str = "banktransfer,opay"
+    payment_options: str = "card,banktransfer"
 
 
 class InitializePaymentResponse(BaseModel):
@@ -96,7 +96,7 @@ def initialize(
         )
 
     try:
-        result = initialize_payment(order, current_user, body.payment_method)
+        result = initialize_payment(order, current_user, body.payment_options)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,

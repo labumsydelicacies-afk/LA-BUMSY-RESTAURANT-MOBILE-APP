@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # ─── helpers ────────────────────────────────────────────────────────────────
 
 def _get_all_riders(db: Session) -> list[User]:
-    return db.query(User).filter(User.is_rider.is_(True), User.is_verified.is_(True)).all()
+    return db.query(User).filter(User.is_rider.is_(True), User.is_email_verified.is_(True)).all()
 
 
 def _get_all_admins(db: Session) -> list[User]:

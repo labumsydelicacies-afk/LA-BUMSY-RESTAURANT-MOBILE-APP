@@ -53,9 +53,9 @@ def authenticate_user(db: Session, email: str, password: str):
         logger.warning(f"Authentication failed - email not found: {email}")
         return None
 
-    if not user.is_verified:
+    if not user.is_email_verified:
         logger.warning(f"Authentication failed - user not verified: {email}")
-        return None
+        raise ValueError("Email not verified")
 
     if not verify_password(password, user.hashed_password):
         logger.warning(f"Authentication failed - wrong password for: {email}")
@@ -98,20 +98,24 @@ def login_user(db: Session, email: str, password: str) -> dict | None:
     else:
         role = UserRole.CUSTOMER
 
+    user_state = "PROFILE_INCOMPLETE" if not user.is_profile_complete else "ACTIVE"
+
     token = create_access_token(
         data={
             "sub": user.email,
             "user_id": user.id,
             "nickname": user.nickname,
+            "user_state": user_state
         },
         role=role,
     )
 
-    logger.info(f"Login successful : {email} | role : {role}")
+    logger.info(f"Login successful : {email} | role : {role} | state : {user_state}")
 
     return {
         "access_token": token,
         "token_type": "bearer",
         "role": role,
         "nickname": user.nickname,
+        "user_state": user_state
     }
