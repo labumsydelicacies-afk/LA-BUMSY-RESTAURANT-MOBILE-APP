@@ -44,7 +44,7 @@ def generate_tx_ref(order_id: int) -> str:
 
 # ─── Payment initialisation ─────────────────────────────────────────────────
 
-def initialize_payment(order: Order, user: User) -> dict:
+def initialize_payment(order: Order, user: User, payment_method: str = "banktransfer,opay") -> dict:
     """
     Calls Flutterwave's POST /payments endpoint to create a hosted payment link.
 
@@ -72,8 +72,8 @@ def initialize_payment(order: Order, user: User) -> dict:
         "amount": order.total_price,
         "currency": "NGN",
         "redirect_url": callback_url,
-        # ── Restrict to non-card methods only ──────────────────────
-        "payment_options": "banktransfer,opay",
+        # ── Restrict to selected method only ──────────────────────
+        "payment_options": payment_method,
         # ───────────────────────────────────────────────────────────
         "customer": {
             "email": user.email,

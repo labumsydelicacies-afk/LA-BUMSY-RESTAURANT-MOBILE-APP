@@ -118,6 +118,10 @@ class OrderItem(Base):
     order = relationship("Order", back_populates="items")
     food = relationship("Food", back_populates="order_items")
 
+    @property
+    def food_name(self) -> str | None:
+        return self.food.name if self.food else None
+
 
 
 

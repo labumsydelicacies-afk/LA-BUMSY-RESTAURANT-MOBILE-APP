@@ -85,7 +85,7 @@ def create_otp(session: Session, user_id: int) -> str:
     return otp
 
 
-def send_email(to_email: str, subject: str, body: str) -> None:
+def send_email(to_email: str, subject: str, body: str, html_body: str | None = None) -> None:
     if not SMTP_EMAIL or not SMTP_PASSWORD:
         raise ValueError("SMTP_EMAIL and SMTP_PASSWORD must be set")
 
@@ -96,6 +96,9 @@ def send_email(to_email: str, subject: str, body: str) -> None:
     msg["From"] = SMTP_EMAIL
     msg["To"] = to_email
     msg.set_content(body)
+    
+    if html_body:
+        msg.add_alternative(html_body, subtype="html")
 
     with smtplib.SMTP_SSL(
         SMTP_HOST,
@@ -108,11 +111,13 @@ def send_email(to_email: str, subject: str, body: str) -> None:
 
 
 def send_verification_email(session: Session, user: User) -> None:
+    from app.services.email_templates import get_verification_otp_html
     otp = create_otp(session, user.id)
     send_email(
         to_email=user.email,
         subject="Your verification code",
         body=f"Your verification code is {otp}. It expires in {OTP_EXPIRY_MINUTES} minutes.",
+        html_body=get_verification_otp_html(otp, "verification")
     )
 
 
@@ -130,6 +135,9 @@ def send_verification_email_async(
     # Precompute static content before opening the SMTP connection.
     body = f"Your {purpose} code is {otp}. It expires in {OTP_EXPIRY_MINUTES} minutes."
 
+    from app.services.email_templates import get_verification_otp_html
+    html_body = get_verification_otp_html(otp, purpose)
+
     if not SMTP_EMAIL or not SMTP_PASSWORD:
         logger.error("Verification email skipped for %s: SMTP credentials are missing", to_email)
         return
@@ -139,6 +147,7 @@ def send_verification_email_async(
     msg["From"] = SMTP_EMAIL
     msg["To"] = to_email
     msg.set_content(body)
+    msg.add_alternative(html_body, subtype="html")
 
     started = time.perf_counter()
     try:

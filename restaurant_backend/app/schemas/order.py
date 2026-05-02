@@ -17,6 +17,7 @@ class OrderItemCreate(BaseModel):
 # -------- ORDER ITEM RESPONSE --------#
 class OrderItemResponse(BaseModel):
     food_id: int
+    food_name: str | None = None
     quantity: int
     price: float
 

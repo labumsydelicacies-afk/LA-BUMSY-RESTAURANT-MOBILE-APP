@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 const STATUS_COLORS = {
   pending: "bg-amber-100 text-amber-800 border-amber-200",
   confirmed: "bg-blue-100 text-blue-800 border-blue-200",
@@ -19,6 +21,7 @@ const STATUS_LABELS = {
 };
 
 export default function OrderCard({ order, children }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const status = String(order.status || "pending").toLowerCase();
   const statusStyle = STATUS_COLORS[status] || "bg-gray-100 text-gray-800 border-gray-200";
   const statusLabel = STATUS_LABELS[status] || order.status;
@@ -52,6 +55,41 @@ export default function OrderCard({ order, children }) {
           ₦{Number(order.total_price).toLocaleString()}
         </p>
       </div>
+
+      {order.items && order.items.length > 0 && (
+        <div className="mt-4">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center justify-center w-full gap-2 py-2 text-xs font-bold text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-100"
+          >
+            {isExpanded ? "Hide Details" : "View Order Details"}
+            <svg 
+              className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} 
+              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          {isExpanded && (
+            <div className="mt-3 p-4 bg-gray-50 rounded-xl border border-gray-100 space-y-2 animate-fade-in">
+              {order.items.map((item, idx) => (
+                <div key={idx} className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-brandRed w-6">x{item.quantity}</span>
+                    <span className="font-medium text-gray-700 truncate max-w-[180px]">
+                      {item.food_name || `Item #${item.food_id}`}
+                    </span>
+                  </div>
+                  <span className="font-bold text-gray-900">
+                    ₦{(Number(item.price) * item.quantity).toLocaleString()}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {order.delivery_otp && status === "out_for_delivery" && (
         <div className="mt-4 rounded-xl bg-cyan-50 p-4 border border-cyan-100 flex flex-col items-center justify-center">

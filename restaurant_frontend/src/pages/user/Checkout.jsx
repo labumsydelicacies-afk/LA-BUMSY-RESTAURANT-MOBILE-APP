@@ -13,6 +13,7 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(""); // "creating" | "redirecting"
   const [error, setError] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("banktransfer");
 
   const handleCheckout = async () => {
     if (!items.length) return;
@@ -34,6 +35,7 @@ export default function Checkout() {
       setLoadingStep("redirecting");
       const { data: paymentData } = await axiosInstance.post("/payments/initialize", {
         order_id: order.id,
+        payment_method: paymentMethod,
       });
 
       // ── Step 3: Hard-redirect to Flutterwave hosted payment page ─────────
@@ -103,24 +105,34 @@ export default function Checkout() {
 
             {/* Payment Method Badge */}
             <div className="rounded-3xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brandCream text-brandRed">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-heading text-lg font-bold text-gray-900">Payment Methods</h3>
-                  <p className="text-xs font-medium text-gray-500">Powered by Flutterwave</p>
+                  <h3 className="font-heading text-lg font-bold text-gray-900">Payment Method</h3>
+                  <p className="text-xs font-medium text-gray-500">Select how you'd like to pay</p>
                 </div>
               </div>
-              <div className="flex gap-2 flex-wrap">
-                <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700 border border-green-100">
-                  🏦 Bank Transfer
-                </span>
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-100">
-                  📱 OPay
-                </span>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("banktransfer")}
+                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${paymentMethod === 'banktransfer' ? 'border-green-500 bg-green-50/50 scale-[0.98]' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'}`}
+                >
+                  <div className="text-3xl mb-2">🏦</div>
+                  <span className={`text-sm font-bold ${paymentMethod === 'banktransfer' ? 'text-green-700' : 'text-gray-600'}`}>Bank Transfer</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("opay")}
+                  className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${paymentMethod === 'opay' ? 'border-blue-500 bg-blue-50/50 scale-[0.98]' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'}`}
+                >
+                  <div className="text-3xl mb-2">📱</div>
+                  <span className={`text-sm font-bold ${paymentMethod === 'opay' ? 'text-blue-700' : 'text-gray-600'}`}>OPay</span>
+                </button>
               </div>
             </div>
 
