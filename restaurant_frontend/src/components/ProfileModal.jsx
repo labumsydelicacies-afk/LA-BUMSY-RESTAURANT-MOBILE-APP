@@ -30,7 +30,12 @@ export default function ProfileModal({ isForced = false, onClose }) {
         if (onClose) onClose();
       }
     } catch (err) {
-      setError(err.response?.data?.detail || "Failed to save profile");
+      const errorMsg = err.response?.data?.detail || "Failed to save profile";
+      setError(errorMsg);
+      // Auto-close if backend says it's already complete
+      if (errorMsg.toLowerCase().includes("already complete")) {
+        useAuthStore.setState((state) => ({ user: { ...state.user, userState: "ACTIVE" } }));
+      }
     } finally {
       setLoading(false);
     }
@@ -95,15 +100,16 @@ export default function ProfileModal({ isForced = false, onClose }) {
           {error && <p className="text-sm font-medium text-red-500">{error}</p>}
 
           <div className="flex gap-3 pt-2">
-            {!isForced && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-1 rounded-xl bg-gray-100 py-3 font-semibold text-gray-600 hover:bg-gray-200"
-              >
-                Cancel
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (onClose) onClose();
+                else useAuthStore.setState((state) => ({ user: { ...state.user, userState: "ACTIVE" } }));
+              }}
+              className="flex-1 rounded-xl bg-gray-100 py-3 font-semibold text-gray-600 hover:bg-gray-200"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={loading}
