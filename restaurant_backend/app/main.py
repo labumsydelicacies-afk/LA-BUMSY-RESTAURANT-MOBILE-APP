@@ -6,6 +6,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.config import CORS_ALLOW_ORIGIN_REGEX, CORS_ALLOW_ORIGINS
 from app.routes import auth, food, orders, delivery, admin_users, payment, profile
@@ -58,15 +59,29 @@ def health_check():
 def verify_schema():
     from app.db.database import engine
     from sqlalchemy import inspect
-    inspector = inspect(engine)
-    columns = [col['name'] for col in inspector.get_columns('users')]
-    required_cols = ['phone', 'address', 'first_name', 'last_name', 'is_email_verified', 'is_profile_complete']
-    missing = [c for c in required_cols if c not in columns]
-    if missing:
-        logger.error(f"SCHEMA MISMATCH DETECTED: Missing columns in users table: {missing}. Run migrations!")
+    try:
+        inspector = inspect(engine)
+        users_table_exists = inspector.has_table("users")
+        delivery_verifications_exists = inspector.has_table("delivery_verifications")
 
-    delivery_columns = [col['name'] for col in inspector.get_columns('delivery_verifications')]
-    if 'otp_code' not in delivery_columns:
-        logger.error("SCHEMA MISMATCH DETECTED: Missing otp_code in delivery_verifications table. Run migrations!")
+        if not users_table_exists:
+            logger.error("SCHEMA MISMATCH DETECTED: Missing users table. Run migrations!")
+            return
+
+        columns = [col["name"] for col in inspector.get_columns("users")]
+        required_cols = ["phone", "address", "first_name", "last_name", "is_email_verified", "is_profile_complete"]
+        missing = [c for c in required_cols if c not in columns]
+        if missing:
+            logger.error(f"SCHEMA MISMATCH DETECTED: Missing columns in users table: {missing}. Run migrations!")
+
+        if not delivery_verifications_exists:
+            logger.error("SCHEMA MISMATCH DETECTED: Missing delivery_verifications table. Run migrations!")
+            return
+
+        delivery_columns = [col["name"] for col in inspector.get_columns("delivery_verifications")]
+        if "otp_code" not in delivery_columns:
+            logger.error("SCHEMA MISMATCH DETECTED: Missing otp_code in delivery_verifications table. Run migrations!")
+    except SQLAlchemyError as exc:
+        logger.exception("Schema verification failed at startup. App will continue running. Error: %s", exc)
 
 logger.info("Restaurant API started successfully")
