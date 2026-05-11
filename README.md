@@ -1,39 +1,60 @@
-# LA BUMSY Restaurant App
+# LA BUMSY RESTAURANT MOBILE APP
 
-This repository has two separate app folders:
+Full-stack restaurant ordering platform with a FastAPI backend and a React + Vite frontend.
 
-- `restaurant_backend` for the FastAPI backend
-- `restaurant_frontend` for the Vite/React frontend
+## Project Structure
 
-The backend is the only Python project in this repo.
+- `restaurant_backend` - FastAPI API, business logic, database models, Alembic migrations, and tests.
+- `restaurant_frontend` - React client built with Vite and Tailwind.
 
-## Backend Setup
+## Tech Stack
 
-Run Python and Alembic commands from `restaurant_backend`:
+### Backend
+- Python 3.12+
+- FastAPI
+- SQLAlchemy
+- Alembic
+- PostgreSQL (recommended)
 
-```powershell
-cd restaurant_backend
-uv sync
-uv run uvicorn app.main:app --reload
-```
+### Frontend
+- React
+- Vite
+- Tailwind CSS
 
-For migrations:
+## Local Setup
 
-```powershell
-cd restaurant_backend
-uv run alembic -c app/db/migrations/alembic.ini upgrade head
-```
+## 1) Backend
 
-## Frontend Setup
+1. Open a terminal in `restaurant_backend`.
+2. Create and activate a virtual environment.
+3. Install dependencies:
+   - `pip install -r requirements.txt`
+4. Create/update `.env` from your environment template and set required values (database URL, auth secrets, etc.).
+5. Run migrations.
+6. Start the API:
+   - `uvicorn app.main:app --reload`
 
-Run Node commands from `restaurant_frontend`:
+## 2) Frontend
 
-```powershell
-cd restaurant_frontend
-npm install
-npm run dev
-```
+1. Open a terminal in `restaurant_frontend`.
+2. Install dependencies:
+   - `npm install`
+3. Configure frontend environment values (`.env.development` / `.env.production`) as needed.
+4. Start development server:
+   - `npm run dev`
 
-## Why The Extra `.venv` Happened
+## Testing
 
-There used to be a second Python project definition at the repo root. Running `uv` there created a different `.venv` from the backend one. The root Python manifests were removed so `restaurant_backend` is now the single source of truth.
+From `restaurant_backend`:
+
+- Run all tests:
+  - `pytest`
+- Run unit tests:
+  - `pytest app/tests/unit`
+- Run integration tests:
+  - `pytest app/tests/integration`
+
+## Notes
+
+- Keep secrets out of version control (`.env` files should remain local).
+- Run backend and frontend together for full end-to-end flow.
