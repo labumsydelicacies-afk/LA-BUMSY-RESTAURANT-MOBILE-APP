@@ -39,6 +39,8 @@ class OrderResponse(BaseModel):
     created_at: datetime
     items: List[OrderItemResponse]
     delivery_otp: str | None = None
+    rider_id: int | None = None
+    rider_name: str | None = None
 
     # Payment fields — populated after Flutterwave integration
     payment_status: str | None = None

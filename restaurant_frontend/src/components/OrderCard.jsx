@@ -28,6 +28,8 @@ export default function OrderCard({ order, children, isHighlighted = false }) {
   const orderIdLabel = order?.id ? String(order.id).slice(-6) : "N/A";
   const paymentStatus = String(order.payment_status || "pending").toLowerCase();
   const paymentIsPaid = paymentStatus === "paid";
+  const riderName = order.rider_name || null;
+  const showRiderAssigned = Boolean(order.rider_id || riderName);
 
   return (
     <article className={`rounded-3xl bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] border relative overflow-hidden scale-in ${isHighlighted ? "border-brandRed ring-2 ring-brandRed/15" : "border-gray-100"}`}>
@@ -57,6 +59,15 @@ export default function OrderCard({ order, children, isHighlighted = false }) {
           {paymentIsPaid ? "Paid" : paymentStatus === "failed" ? "Failed" : "Pending"}
         </span>
       </div>
+
+      {showRiderAssigned && (
+        <div className="mb-4 rounded-2xl bg-cyan-50 px-4 py-3 border border-cyan-100">
+          <p className="text-xs font-bold uppercase tracking-wider text-cyan-700">Assigned Rider</p>
+          <p className="mt-1 text-sm font-semibold text-cyan-900">
+            {riderName || `Rider #${order.rider_id}`}
+          </p>
+        </div>
+      )}
       
       <div className="flex items-center justify-between mt-2 pt-4 border-t border-dashed border-gray-200">
         <p className="text-sm font-semibold text-gray-500">Total Amount</p>

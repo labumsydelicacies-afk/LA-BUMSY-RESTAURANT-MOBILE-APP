@@ -119,6 +119,12 @@ class Order(Base):
             return self.delivery_verification.otp_hash
         return None
 
+    @property
+    def rider_name(self) -> str | None:
+        if not self.rider:
+            return None
+        return self.rider.display_name
+
 
 
 
