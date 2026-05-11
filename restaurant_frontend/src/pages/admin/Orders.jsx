@@ -58,7 +58,7 @@ export default function Orders() {
   return (
     <main>
       <Navbar title="All orders" />
-      <section className="space-y-3 px-4 pb-24 pt-2">
+      <section className="mx-auto w-full max-w-lg space-y-3 px-3 pb-24 pt-3 sm:px-4">
         {loading ? <p className="text-sm text-gray-500">Loading orders...</p> : null}
         {error ? <p className="text-sm text-brandRed">{error}</p> : null}
         {orders.map((order, index) => (
@@ -67,7 +67,7 @@ export default function Orders() {
             className="slide-up"
             style={{ animationDelay: `${index * 55}ms` }}
           >
-            <OrderCard order={order}>
+            <OrderCard order={order} showDeliveryOtp={false}>
               <select
                 className="w-full rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
                 value={order.status}

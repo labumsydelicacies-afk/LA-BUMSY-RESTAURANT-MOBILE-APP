@@ -139,7 +139,7 @@ export default function AdminUsers() {
   return (
     <main>
       <Navbar title="User management" />
-      <section className="space-y-3 px-4 pb-24 pt-3">
+      <section className="mx-auto w-full max-w-lg space-y-3 px-3 pb-24 pt-3 sm:px-4">
 
         {/* Search */}
         <input

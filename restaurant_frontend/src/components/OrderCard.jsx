@@ -20,7 +20,7 @@ const STATUS_LABELS = {
   cancelled: "Cancelled",
 };
 
-export default function OrderCard({ order, children, isHighlighted = false }) {
+export default function OrderCard({ order, children, isHighlighted = false, showDeliveryOtp = true }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const status = String(order.status || "pending").toLowerCase();
   const statusStyle = STATUS_COLORS[status] || "bg-gray-100 text-gray-800 border-gray-200";
@@ -32,13 +32,13 @@ export default function OrderCard({ order, children, isHighlighted = false }) {
   const showRiderAssigned = Boolean(order.rider_id || riderName);
 
   return (
-    <article className={`rounded-3xl bg-white p-5 shadow-[0_8px_24px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] border relative overflow-hidden scale-in ${isHighlighted ? "border-brandRed ring-2 ring-brandRed/15" : "border-gray-100"}`}>
+    <article className={`rounded-3xl bg-white p-4 shadow-[0_8px_24px_rgba(0,0,0,0.04)] transition-all hover:shadow-[0_12px_32px_rgba(0,0,0,0.08)] border relative overflow-hidden scale-in sm:p-5 ${isHighlighted ? "border-brandRed ring-2 ring-brandRed/15" : "border-gray-100"}`}>
       {/* Decorative side accent based on status */}
       <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${statusStyle.split(' ')[0].replace('100', '400')}`} />
       
-      <div className="mb-4 flex items-start justify-between">
+      <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <p className="font-heading text-lg font-black tracking-tight text-gray-900">
+          <p className="font-heading text-base font-black tracking-tight text-gray-900 sm:text-lg">
             Order #{orderIdLabel}
           </p>
           <p className="mt-1 text-xs font-medium text-gray-500">
@@ -53,7 +53,7 @@ export default function OrderCard({ order, children, isHighlighted = false }) {
         </span>
       </div>
 
-      <div className="mb-4 flex items-center justify-between rounded-2xl bg-gray-50 px-4 py-3 border border-gray-100">
+      <div className="mb-4 flex items-center justify-between rounded-2xl bg-gray-50 px-3 py-3 border border-gray-100 sm:px-4">
         <p className="text-xs font-bold uppercase tracking-wider text-gray-500">Payment</p>
         <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${paymentIsPaid ? "bg-green-100 text-green-700" : paymentStatus === "failed" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
           {paymentIsPaid ? "Paid" : paymentStatus === "failed" ? "Failed" : "Pending"}
@@ -69,9 +69,9 @@ export default function OrderCard({ order, children, isHighlighted = false }) {
         </div>
       )}
       
-      <div className="flex items-center justify-between mt-2 pt-4 border-t border-dashed border-gray-200">
+      <div className="flex items-center justify-between gap-3 mt-2 pt-4 border-t border-dashed border-gray-200">
         <p className="text-sm font-semibold text-gray-500">Total Amount</p>
-        <p className="font-heading text-xl font-extrabold text-brandRed">
+        <p className="font-heading text-lg font-extrabold text-brandRed sm:text-xl">
           ₦{Number(order.total_price).toLocaleString()}
         </p>
       </div>
@@ -97,7 +97,7 @@ export default function OrderCard({ order, children, isHighlighted = false }) {
                 <div key={idx} className="flex justify-between items-center text-sm">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-brandRed w-6">x{item.quantity}</span>
-                    <span className="font-medium text-gray-700 truncate max-w-[180px]">
+                    <span className="font-medium text-gray-700 truncate max-w-[150px] sm:max-w-[180px]">
                       {item.food_name || `Item #${item.food_id}`}
                     </span>
                   </div>
@@ -111,10 +111,10 @@ export default function OrderCard({ order, children, isHighlighted = false }) {
         </div>
       )}
 
-      {order.delivery_otp && status === "out_for_delivery" && (
+      {showDeliveryOtp && order.delivery_otp && status === "out_for_delivery" && (
         <div className="mt-4 rounded-xl bg-cyan-50 p-4 border border-cyan-100 flex flex-col items-center justify-center">
           <p className="text-xs font-bold text-cyan-800 uppercase tracking-wider mb-1">Delivery Code</p>
-          <p className="font-heading text-3xl font-black text-cyan-900 tracking-widest">{order.delivery_otp}</p>
+          <p className="font-heading text-3xl font-black text-cyan-900 tracking-widest">{String(order.delivery_otp).slice(0, 6)}</p>
           <p className="text-xs text-cyan-700 mt-1 text-center">Give this code to the rider when they arrive.</p>
         </div>
       )}

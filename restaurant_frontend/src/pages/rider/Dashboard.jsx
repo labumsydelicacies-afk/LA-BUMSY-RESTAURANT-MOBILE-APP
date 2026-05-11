@@ -177,7 +177,7 @@ export default function RiderDashboard() {
   return (
     <main>
       <Navbar title="Rider dashboard" />
-      <section className="space-y-6 px-4 pb-24 pt-2">
+      <section className="mx-auto w-full max-w-lg space-y-5 px-3 pb-24 pt-3 sm:space-y-6 sm:px-4">
 
         {/* Global feedback */}
         {error ? (
@@ -228,7 +228,7 @@ export default function RiderDashboard() {
               {pendingDeliveries.map((delivery) => (
                 <div
                   key={delivery.id}
-                  className="rounded-3xl bg-white p-5 border border-gray-100 shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
+                  className="rounded-3xl bg-white p-4 border border-gray-100 shadow-[0_8px_24px_rgba(0,0,0,0.04)] sm:p-5"
                 >
                   <div className="mb-3 flex items-center justify-between">
                     <p className="font-heading text-lg font-black text-gray-900">
@@ -270,7 +270,7 @@ export default function RiderDashboard() {
               {activeDeliveries.map((delivery) => (
                 <div
                   key={delivery.id}
-                  className="rounded-3xl bg-white p-5 border border-gray-100 shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
+                  className="rounded-3xl bg-white p-4 border border-gray-100 shadow-[0_8px_24px_rgba(0,0,0,0.04)] sm:p-5"
                 >
                   <div className="mb-4 flex items-center justify-between">
                     <p className="font-heading text-lg font-black text-gray-900">
@@ -317,7 +317,7 @@ export default function RiderDashboard() {
               {completedDeliveries.map((delivery) => (
                 <div
                   key={delivery.id}
-                  className="rounded-3xl bg-white p-5 border border-gray-100 shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
+                  className="rounded-3xl bg-white p-4 border border-gray-100 shadow-[0_8px_24px_rgba(0,0,0,0.04)] sm:p-5"
                 >
                   <div className="flex items-center justify-between">
                     <p className="font-heading text-base font-black text-gray-900">

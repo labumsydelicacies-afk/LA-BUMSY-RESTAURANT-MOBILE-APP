@@ -137,6 +137,7 @@ def mark_picked_up(db: Session, order_id: int, rider_id: int) -> tuple[Delivery,
     verification = DeliveryVerification(
         order_id=order_id,
         otp_hash=_hash_otp(otp),
+        otp_code=otp,
         expires_at=datetime.now() + timedelta(hours=DELIVERY_OTP_EXPIRY_HOURS),
         is_used=False,
         created_at=datetime.now(),
@@ -192,6 +193,7 @@ def complete_delivery(db: Session, order_id: int, rider_id: int, otp: str) -> De
 
     # Consume OTP
     verification.is_used = True
+    verification.otp_code = None
 
     # Finalize delivery
     delivery.delivered_at = datetime.now()

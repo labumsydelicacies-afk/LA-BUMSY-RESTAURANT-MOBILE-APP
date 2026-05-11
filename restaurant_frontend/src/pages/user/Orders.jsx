@@ -76,8 +76,8 @@ export default function Orders() {
     <main className="page-wrapper bg-gray-50/50">
       <Navbar title="Your Order History" />
       
-      <section className="mx-4 mt-6 pb-28 max-w-lg mx-auto">
-        <h1 className="font-heading text-3xl font-extrabold text-gray-900 mb-6 fade-up">My Orders</h1>
+      <section className="mx-auto mt-4 w-full max-w-lg px-3 pb-28 sm:mt-6 sm:px-4">
+        <h1 className="mb-4 font-heading text-2xl font-extrabold text-gray-900 fade-up sm:mb-6 sm:text-3xl">My Orders</h1>
 
         {paymentNotice && (
           <div className={`mb-4 rounded-2xl border px-4 py-3 text-sm font-semibold fade-up ${paymentNotice.tone}`}>
@@ -86,7 +86,7 @@ export default function Orders() {
         )}
 
         {loading ? (
-          <div className="space-y-4 fade-up" style={{ animationDelay: '0.1s' }}>
+          <div className="space-y-3 fade-up sm:space-y-4" style={{ animationDelay: '0.1s' }}>
             {[...Array(3)].map((_, i) => (
               <div key={i} className="rounded-3xl bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 animate-pulse">
                 <div className="flex items-center justify-between mb-4">
@@ -107,7 +107,7 @@ export default function Orders() {
             <p className="font-semibold">{error}</p>
           </div>
         ) : orders.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {orders.map((order, idx) => (
               <div key={order.id} className="fade-up" style={{ animationDelay: `${0.1 + (idx * 0.05)}s` }}>
                 <OrderCard order={order} isHighlighted={highlightedOrderId === Number(order.id)} />
@@ -115,7 +115,7 @@ export default function Orders() {
             ))}
           </div>
         ) : (
-          <div className="rounded-[2rem] bg-white p-12 text-center shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 fade-up" style={{ animationDelay: '0.1s' }}>
+          <div className="rounded-3xl bg-white p-8 text-center shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 fade-up sm:p-12" style={{ animationDelay: '0.1s' }}>
             <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-brandCream text-5xl">
               🧾
             </div>

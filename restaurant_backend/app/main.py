@@ -65,4 +65,8 @@ def verify_schema():
     if missing:
         logger.error(f"SCHEMA MISMATCH DETECTED: Missing columns in users table: {missing}. Run migrations!")
 
+    delivery_columns = [col['name'] for col in inspector.get_columns('delivery_verifications')]
+    if 'otp_code' not in delivery_columns:
+        logger.error("SCHEMA MISMATCH DETECTED: Missing otp_code in delivery_verifications table. Run migrations!")
+
 logger.info("Restaurant API started successfully")

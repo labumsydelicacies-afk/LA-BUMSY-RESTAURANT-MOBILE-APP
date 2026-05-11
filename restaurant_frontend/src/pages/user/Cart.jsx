@@ -15,9 +15,9 @@ export default function Cart() {
     <main className="page-wrapper bg-gray-50/50">
       <Navbar title="Review Your Cart" />
       
-      <section className="mx-4 mt-6 mb-24 max-w-lg mx-auto fade-up">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="font-heading text-3xl font-extrabold text-gray-900">Your Cart</h1>
+      <section className="mx-auto mt-4 mb-24 w-full max-w-lg px-3 fade-up sm:mt-6 sm:px-4">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h1 className="font-heading text-2xl font-extrabold text-gray-900 sm:text-3xl">Your Cart</h1>
           {items.length > 0 && (
             <button 
               onClick={clearCart}
@@ -29,7 +29,7 @@ export default function Cart() {
         </div>
 
         {items.length === 0 ? (
-          <div className="rounded-[2rem] bg-white p-12 text-center shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100">
+          <div className="rounded-3xl bg-white p-8 text-center shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 sm:p-12">
             <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gray-50 text-5xl">
               🛒
             </div>
@@ -40,11 +40,11 @@ export default function Cart() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {items.map((item, index) => (
               <article
                 key={item.id}
-                className="group relative flex items-center overflow-hidden rounded-3xl bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 transition-shadow hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] slide-up"
+                className="group relative flex items-center overflow-hidden rounded-3xl bg-white p-3 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 transition-shadow hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] slide-up sm:p-4"
                 style={{ animationDelay: `${index * 60}ms` }}
               >
                 <div className="flex-1 min-w-0 pr-4">
@@ -75,7 +75,7 @@ export default function Cart() {
             ))}
 
             {/* Total Section */}
-            <div className="mt-8 rounded-[2rem] bg-white p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 relative overflow-hidden">
+            <div className="mt-6 rounded-3xl bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-gray-100 relative overflow-hidden sm:mt-8 sm:p-6">
               <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-brandRed/5 blur-2xl pointer-events-none" />
               
               <div className="space-y-3 text-sm font-medium text-gray-500 mb-4 border-b border-dashed border-gray-200 pb-4">
@@ -91,7 +91,7 @@ export default function Cart() {
               
               <div className="flex items-center justify-between mb-6">
                 <p className="text-base font-bold text-gray-800">Total</p>
-                <p className="font-heading text-3xl font-black text-brandRed">₦{total.toLocaleString()}</p>
+                <p className="font-heading text-2xl font-black text-brandRed sm:text-3xl">₦{total.toLocaleString()}</p>
               </div>
               
               <Link

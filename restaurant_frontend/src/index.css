@@ -18,9 +18,18 @@
   background: var(--color-brandCream);
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
-  min-width: 360px;
+  min-width: 320px;
+  overflow-x: hidden;
   background: var(--color-brandCream);
   background-image: 
     radial-gradient(at 0% 0%, hsla(28,100%,74%,0.15) 0px, transparent 50%),
@@ -28,6 +37,12 @@ body {
     radial-gradient(at 100% 100%, hsla(355,100%,93%,0.1) 0px, transparent 50%);
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
+}
+
+.page-wrapper {
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 /* Prevent iOS auto-zoom on focused form fields in modal flows. */

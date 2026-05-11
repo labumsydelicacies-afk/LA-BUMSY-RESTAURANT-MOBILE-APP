@@ -116,7 +116,7 @@ class Order(Base):
     @property
     def delivery_otp(self) -> str | None:
         if self.delivery_verification and not self.delivery_verification.is_used:
-            return self.delivery_verification.otp_hash
+            return self.delivery_verification.otp_code
         return None
 
     @property
@@ -195,6 +195,7 @@ class DeliveryVerification(Base):
     order_id: Mapped[int] = mapped_column(Integer, ForeignKey("orders.id"), nullable=False, unique=True, index=True)
 
     otp_hash: Mapped[str] = mapped_column(String, nullable=False)
+    otp_code: Mapped[str | None] = mapped_column(String, nullable=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     is_used: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)

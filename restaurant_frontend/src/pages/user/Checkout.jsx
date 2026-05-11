@@ -57,21 +57,21 @@ export default function Checkout() {
     <main className="page-wrapper bg-gray-50/50">
       <Navbar title="Secure Checkout" />
 
-      <section className="mx-4 mt-6 pb-28 max-w-lg mx-auto fade-up">
-        <h1 className="font-heading text-3xl font-extrabold text-gray-900 mb-6">Checkout</h1>
+      <section className="mx-auto mt-4 w-full max-w-lg px-3 pb-28 sm:mt-6 sm:px-4 fade-up">
+        <h1 className="mb-4 font-heading text-2xl font-extrabold text-gray-900 sm:mb-6 sm:text-3xl">Checkout</h1>
 
         {items.length === 0 ? (
-          <div className="rounded-[2rem] bg-white p-8 text-center shadow-sm border border-gray-100">
+          <div className="rounded-3xl bg-white p-6 text-center shadow-sm border border-gray-100 sm:p-8">
             <p className="text-gray-500 mb-4">Your cart is empty.</p>
             <button className="btn-primary w-full" onClick={() => navigate("/user/home")}>
               Go back to Menu
             </button>
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="rounded-3xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 relative overflow-hidden">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-heading text-xl font-bold text-gray-900">Order Summary</h2>
+          <div className="space-y-4 sm:space-y-6">
+            <div className="rounded-3xl bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 relative overflow-hidden sm:p-6">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <h2 className="font-heading text-lg font-bold text-gray-900 sm:text-xl">Order Summary</h2>
                 <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">
                   {items.length} item{items.length > 1 ? "s" : ""}
                 </span>
@@ -91,13 +91,13 @@ export default function Checkout() {
               </ul>
               <div className="border-t border-dashed border-gray-200 pt-4 mt-4">
                 <p className="text-sm font-semibold text-gray-500 mb-1">Total to Pay</p>
-                <p className="font-heading text-3xl font-black text-brandRed">
+                <p className="font-heading text-2xl font-black text-brandRed sm:text-3xl">
                   N{total.toLocaleString()}
                 </p>
               </div>
             </div>
 
-            <div className="rounded-3xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100">
+            <div className="rounded-3xl bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 sm:p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brandCream text-brandRed">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -110,19 +110,36 @@ export default function Checkout() {
                   <p className="text-xs font-medium text-gray-500">Continue to Flutterwave to complete payment</p>
                 </div>
               </div>
-              <div className="rounded-2xl border-2 border-green-500 bg-green-50/50 p-4">
+              <button
+                id="checkout-pay-btn"
+                type="button"
+                onClick={handleCheckout}
+                disabled={loading}
+                className="w-full rounded-2xl border-2 border-green-500 bg-green-50/50 p-4 text-left transition hover:bg-green-50 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
+              >
                 <div className="flex items-center justify-center gap-3">
                   <div className="text-center">
-                    <p className="text-sm font-bold text-green-700">Click here to make payment</p>
+                    <p className="text-sm font-bold text-green-700">
+                      {loading ? loadingLabel : "Click here to make payment"}
+                    </p>
                     <p className="text-xs font-medium text-green-700/80">
-                      You will be redirected to Flutterwave to complete your payment.
+                      {loading
+                        ? "Please wait while we prepare your secure checkout."
+                        : `Pay N${total.toLocaleString()} securely with Flutterwave.`}
                     </p>
                   </div>
                 </div>
-              </div>
+              </button>
+              <p className="text-center text-xs text-gray-400 mt-4 font-medium flex items-center justify-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                Secure payment via Flutterwave
+              </p>
             </div>
 
-            <div className="rounded-3xl bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100">
+            <div className="rounded-3xl bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 sm:p-6">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brandCream text-brandRed">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -142,40 +159,6 @@ export default function Checkout() {
                 {error}
               </div>
             )}
-
-            <div className="pt-4">
-              <button
-                id="checkout-pay-btn"
-                className="btn-primary w-full py-4 text-lg shadow-[0_8px_25px_rgba(232,34,10,0.25)] relative overflow-hidden group disabled:opacity-60 disabled:shadow-none"
-                onClick={handleCheckout}
-                disabled={loading}
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    {loadingLabel}
-                  </span>
-                ) : (
-                  <>
-                    Pay Now - N{total.toLocaleString()}
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="absolute right-6 transition-transform duration-300 group-hover:translate-x-1">
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                      <polyline points="12 5 19 12 12 19" />
-                    </svg>
-                  </>
-                )}
-              </button>
-              <p className="text-center text-xs text-gray-400 mt-4 font-medium flex items-center justify-center gap-1">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                Secure payment via Flutterwave
-              </p>
-            </div>
           </div>
         )}
       </section>
