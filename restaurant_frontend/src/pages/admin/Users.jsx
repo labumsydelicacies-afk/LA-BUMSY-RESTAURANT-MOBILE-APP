@@ -66,6 +66,7 @@ function RoleSwitcher({ user, onUpdate, busy }) {
 // ─── User Card ───────────────────────────────────────────────────────────────
 function UserCard({ user, onUpdate, busy }) {
   const displayName = getDisplayName(user);
+  const isVerified = user.is_email_verified ?? user.is_verified ?? false;
   return (
     <article className="rounded-2xl bg-white p-4 shadow-[0_4px_16px_rgba(0,0,0,0.05)] border border-gray-100">
       <div className="flex items-start justify-between gap-2">
@@ -77,7 +78,7 @@ function UserCard({ user, onUpdate, busy }) {
           {user.is_admin && <RoleBadge label="Admin" active color="red" />}
           {user.is_rider && <RoleBadge label="Rider" active color="cyan" />}
           {!user.is_admin && !user.is_rider && <RoleBadge label="Customer" active color="blue" />}
-          {!user.is_verified && <RoleBadge label="Unverified" active color="gray" />}
+          {!isVerified && <RoleBadge label="Unverified" active color="gray" />}
         </div>
       </div>
       <RoleSwitcher user={user} onUpdate={onUpdate} busy={busy === user.id} />
