@@ -6,6 +6,19 @@ import OrderCard from "../../components/OrderCard";
 import { useSocketStore } from "../../stores/socketStore";
 
 const statuses = ["pending", "confirmed", "preparing", "ready_for_pickup", "out_for_delivery", "delivered", "cancelled"];
+const riderTriggerStatuses = new Set(["ready_for_pickup", "out_for_delivery", "delivered"]);
+
+function getAllowedStatuses(order) {
+  const currentStatus = String(order.status || "").toLowerCase();
+  const riderAccepted = Boolean(order.rider_id);
+  return statuses.filter((statusOption) => {
+    if (statusOption !== "out_for_delivery") return true;
+    // Admin can only set this after rider accepts (rider_id assigned)
+    // unless already out_for_delivery/delivered/cancelled.
+    if (riderAccepted) return true;
+    return currentStatus === "out_for_delivery";
+  });
+}
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -68,13 +81,20 @@ export default function Orders() {
             style={{ animationDelay: `${index * 55}ms` }}
           >
             <OrderCard order={order} showDeliveryOtp={false}>
+              {riderTriggerStatuses.has(String(order.status || "").toLowerCase()) ? (
+                <p className="mb-2 text-xs font-medium text-gray-600">
+                  {order.rider_id
+                    ? `Rider accepted: ${order.rider_name || `Rider #${order.rider_id}`}`
+                    : "Awaiting rider acceptance"}
+                </p>
+              ) : null}
               <select
                 className="w-full rounded-lg border px-3 py-2 text-sm disabled:opacity-50"
                 value={order.status}
                 onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
                 disabled={updatingStatus === order.id}
               >
-                {statuses.map((status) => (
+                {getAllowedStatuses(order).map((status) => (
                   <option value={status} key={status}>
                     {status}
                   </option>

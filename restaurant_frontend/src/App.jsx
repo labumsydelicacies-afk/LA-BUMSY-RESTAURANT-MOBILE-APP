@@ -36,6 +36,7 @@ export default function App() {
   const initialize = useAuthStore((state) => state.initialize);
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const profileChecked = useAuthStore((state) => state.profileChecked);
   const [toast, setToast] = useState("");
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function App() {
   return (
     <div className="mx-auto min-h-screen max-w-3xl bg-brandCream pb-20 font-body text-[#1c1c1c]">
       <Toast message={toast} onClose={() => setToast("")} />
-      {isAuthenticated && user?.userState === "PROFILE_INCOMPLETE" && (
+      {isAuthenticated && profileChecked && user?.userState === "PROFILE_INCOMPLETE" && (
         <ProfileModal isForced={true} />
       )}
       <Suspense fallback={<div className="px-4 py-6 text-sm text-gray-500">Loading...</div>}>

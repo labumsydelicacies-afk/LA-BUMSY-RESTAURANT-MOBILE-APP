@@ -36,11 +36,17 @@ export default function Dashboard() {
 
   const stats = useMemo(() => {
     const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total_price || 0), 0);
+    const riderStageOrders = orders.filter((order) =>
+      ["ready_for_pickup", "out_for_delivery", "delivered"].includes(String(order.status || "").toLowerCase())
+    );
+    const acceptedByRider = riderStageOrders.filter((order) => Boolean(order.rider_id)).length;
     return {
       totalOrders: orders.length,
       delivered: orders.filter((order) => order.status === "delivered").length,
       pending: orders.filter((order) => order.status === "pending").length,
       revenue: totalRevenue,
+      riderAwaiting: riderStageOrders.length - acceptedByRider,
+      riderAccepted: acceptedByRider,
     };
   }, [orders]);
 
@@ -85,6 +91,14 @@ export default function Dashboard() {
             <div className="rounded-xl bg-white p-4 shadow-card">
               <p className="text-xs text-gray-500">Pending</p>
               <p className="font-heading text-2xl font-bold">{stats.pending}</p>
+            </div>
+            <div className="rounded-xl bg-white p-4 shadow-card">
+              <p className="text-xs text-gray-500">Rider Accepted</p>
+              <p className="font-heading text-2xl font-bold">{stats.riderAccepted}</p>
+            </div>
+            <div className="rounded-xl bg-white p-4 shadow-card">
+              <p className="text-xs text-gray-500">Awaiting Rider</p>
+              <p className="font-heading text-2xl font-bold">{stats.riderAwaiting}</p>
             </div>
           </>
         )}

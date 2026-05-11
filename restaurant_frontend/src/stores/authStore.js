@@ -25,23 +25,28 @@ function buildDisplayName(userLike) {
   return firstLast || userLike?.display_name || userLike?.nickname || "User";
 }
 
+function userStateFromProfile(userLike) {
+  return userLike?.is_profile_complete ? "ACTIVE" : "PROFILE_INCOMPLETE";
+}
+
 export const useAuthStore = create((set, get) => ({
   token: localStorage.getItem("token"),
   user: null,
   role: null,
   isAuthenticated: false,
   hasHydrated: false,
+  profileChecked: false,
 
-  initialize: () => {
+  initialize: async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      set({ token: null, user: null, role: null, isAuthenticated: false, hasHydrated: true });
+      set({ token: null, user: null, role: null, isAuthenticated: false, hasHydrated: true, profileChecked: true });
       return;
     }
     const payload = decodeJwt(token);
     if (!payload || (payload.exp && payload.exp * 1000 < Date.now())) {
       localStorage.removeItem("token");
-      set({ token: null, user: null, role: null, isAuthenticated: false, hasHydrated: true });
+      set({ token: null, user: null, role: null, isAuthenticated: false, hasHydrated: true, profileChecked: true });
       return;
     }
     set({
@@ -60,7 +65,26 @@ export const useAuthStore = create((set, get) => ({
       role: mapRole(payload.role),
       isAuthenticated: true,
       hasHydrated: true,
+      profileChecked: false,
     });
+
+    // Keep frontend profile state aligned with DB truth so forced modal
+    // only appears for genuinely incomplete profiles.
+    try {
+      const { data } = await axiosInstance.get("/profile/me");
+      set((state) => ({
+        user: {
+          ...state.user,
+          ...data,
+          display_name: buildDisplayName(data),
+          userState: userStateFromProfile(data),
+        },
+        profileChecked: true,
+      }));
+    } catch {
+      // Keep token-derived user data as fallback.
+      set({ profileChecked: true });
+    }
   },
 
   login: async (email, password) => {
@@ -122,7 +146,7 @@ export const useAuthStore = create((set, get) => ({
   completeProfile: async (payload) => {
     const { data } = await axiosInstance.post("/profile/complete", payload);
     set((state) => ({
-      user: { ...state.user, ...data, display_name: buildDisplayName(data), userState: "ACTIVE" }
+      user: { ...state.user, ...data, display_name: buildDisplayName(data), userState: userStateFromProfile(data) }
     }));
     return data;
   },
@@ -130,7 +154,7 @@ export const useAuthStore = create((set, get) => ({
   updateProfile: async (payload) => {
     const { data } = await axiosInstance.post("/profile/update", payload);
     set((state) => ({
-      user: { ...state.user, ...data, display_name: buildDisplayName(data) }
+      user: { ...state.user, ...data, display_name: buildDisplayName(data), userState: userStateFromProfile(data) }
     }));
     return data;
   },

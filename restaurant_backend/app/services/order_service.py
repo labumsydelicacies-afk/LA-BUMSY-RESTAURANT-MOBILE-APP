@@ -135,7 +135,7 @@ def get_orders_by_status(db: Session, status: str, skip: int = 0, limit: int = 5
 
 # ------------------- UPDATE ------------------- #
 
-def update_order_status(db: Session, order_id: int, new_status: str) -> Order:
+def update_order_status(db: Session, order_id: int, new_status: str, actor: str = "admin") -> Order:
     """Updates the status of an existing order."""
     normalized_status = new_status.lower()
 
@@ -166,6 +166,17 @@ def update_order_status(db: Session, order_id: int, new_status: str) -> Order:
 
     if normalized_status == "cancelled" and current_status == "delivered":
         raise ValueError("Cannot cancel an order that has already been delivered")
+
+    # Admin cannot move order to out_for_delivery unless a rider has accepted it.
+    # Rider/system flows still use this transition after pickup.
+    if (
+        normalized_status == "out_for_delivery"
+        and actor == "admin"
+        and order.rider_id is None
+    ):
+        raise ValueError(
+            "Cannot move order to out_for_delivery until a rider accepts the order"
+        )
 
     try:
         old_status = order.status

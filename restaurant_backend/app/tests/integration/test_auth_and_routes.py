@@ -202,3 +202,38 @@ def test_idor_protection_on_payment_order_ownership(client, normal_user, admin_u
 
     pay_attempt = client.post("/payments/initialize", headers=other_headers, json={"order_id": order_id})
     assert pay_attempt.status_code == 403
+
+
+def test_admin_cannot_force_out_for_delivery_without_rider_acceptance(client, admin_user, normal_user):
+    admin_headers = auth_header_for(admin_user)
+    user_headers = auth_header_for(normal_user)
+
+    food_resp = client.post(
+        "/foods",
+        headers=admin_headers,
+        json={"name": "Jollof", "description": "Rice", "price": 2500, "image_url": None, "is_available": True},
+    )
+    food_id = food_resp.json()["id"]
+
+    order_resp = client.post(
+        "/orders",
+        headers=user_headers,
+        json={"items": [{"food_id": food_id, "quantity": 1}]},
+    )
+    order_id = order_resp.json()["id"]
+
+    for next_status in ["pending", "confirmed", "preparing", "ready_for_pickup"]:
+        update_resp = client.patch(
+            f"/orders/{order_id}/status",
+            headers=admin_headers,
+            json={"status": next_status},
+        )
+        assert update_resp.status_code == 200
+
+    blocked = client.patch(
+        f"/orders/{order_id}/status",
+        headers=admin_headers,
+        json={"status": "out_for_delivery"},
+    )
+    assert blocked.status_code == 400
+    assert "rider accepts" in blocked.json()["detail"].lower()

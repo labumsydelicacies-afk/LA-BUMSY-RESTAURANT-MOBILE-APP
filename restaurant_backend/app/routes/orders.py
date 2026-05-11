@@ -89,7 +89,7 @@ def update_status(
     Fires a notification to riders when status reaches ready_for_pickup.
     """
     try:
-        updated = update_order_status(db, order_id, payload.status)
+        updated = update_order_status(db, order_id, payload.status, actor="admin")
         if payload.status == "ready_for_pickup":
             background_tasks.add_task(notify_ready_for_pickup, db, order_id)
         return updated

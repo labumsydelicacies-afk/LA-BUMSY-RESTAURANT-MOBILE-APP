@@ -124,7 +124,7 @@ def mark_picked_up(db: Session, order_id: int, rider_id: int) -> tuple[Delivery,
         raise ValueError("Order has already been marked as picked up")
 
     # Advance order status
-    update_order_status(db, order_id, "out_for_delivery")
+    update_order_status(db, order_id, "out_for_delivery", actor="rider")
 
     # Generate OTP
     otp = _generate_otp()
@@ -199,7 +199,7 @@ def complete_delivery(db: Session, order_id: int, rider_id: int, otp: str) -> De
     delivery.delivered_at = datetime.now()
 
     # Sync order status
-    update_order_status(db, order_id, "delivered")
+    update_order_status(db, order_id, "delivered", actor="rider")
 
     db.commit()
     db.refresh(delivery)

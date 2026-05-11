@@ -47,6 +47,19 @@ def _validate_profile_fields(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Please provide your {', '.join(missing_fields)}",
         )
+
+
+@router.get("/me", response_model=UserResponse)
+def get_profile_me(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    db_user = db.query(User).filter(User.id == current_user.id).first()
+    if not db_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return db_user
+
+
 @router.post("/complete", response_model=UserResponse)
 def complete_profile(payload: ProfileCompleteRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if current_user.is_profile_complete:
