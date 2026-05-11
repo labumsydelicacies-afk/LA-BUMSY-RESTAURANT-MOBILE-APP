@@ -6,6 +6,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.config import CORS_ALLOW_ORIGIN_REGEX, CORS_ALLOW_ORIGINS
@@ -80,7 +81,18 @@ def verify_schema():
 
         delivery_columns = [col["name"] for col in inspector.get_columns("delivery_verifications")]
         if "otp_code" not in delivery_columns:
-            logger.error("SCHEMA MISMATCH DETECTED: Missing otp_code in delivery_verifications table. Run migrations!")
+            logger.error("SCHEMA MISMATCH DETECTED: Missing otp_code in delivery_verifications table.")
+            # Backward-compatible hotfix for environments where migration c4d5e6f7a8b9
+            # has not yet been applied.
+            try:
+                with engine.begin() as conn:
+                    conn.execute(text("ALTER TABLE delivery_verifications ADD COLUMN otp_code VARCHAR"))
+                logger.warning("Auto-heal applied: added missing otp_code column to delivery_verifications.")
+            except SQLAlchemyError as exc:
+                logger.exception(
+                    "Failed to auto-add otp_code column. Run migrations immediately. Error: %s",
+                    exc,
+                )
     except SQLAlchemyError as exc:
         logger.exception("Schema verification failed at startup. App will continue running. Error: %s", exc)
 
