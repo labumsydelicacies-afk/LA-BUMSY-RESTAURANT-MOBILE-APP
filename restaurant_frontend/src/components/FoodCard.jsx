@@ -13,6 +13,7 @@ function resolveImageUrl(imageUrl) {
 function FoodCard({ food }) {
   const addToCart = useCartStore((state) => state.addToCart);
   const [justAdded, setJustAdded] = useState(false);
+  const isAvailable = food.is_available !== false;
 
   const handleAddToCart = (e) => {
     e.preventDefault();
@@ -38,7 +39,7 @@ function FoodCard({ food }) {
         )}
         
         {/* Availability Badge */}
-        {!food.is_available && (
+        {!isAvailable && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
             <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold uppercase tracking-wider text-gray-800 shadow-sm">
               Sold Out
@@ -62,7 +63,7 @@ function FoodCard({ food }) {
             ₦{Number(food.price).toLocaleString()}
           </p>
           
-          {food.is_available ? (
+          {isAvailable ? (
             <button
               className={`flex h-10 w-10 items-center justify-center rounded-full text-white shadow-[0_4px_12px_rgba(232,34,10,0.3)] transition-all duration-200 hover:scale-110 active:scale-90 ${
                 justAdded

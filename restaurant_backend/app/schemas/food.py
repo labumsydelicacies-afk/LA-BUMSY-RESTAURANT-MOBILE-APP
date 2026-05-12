@@ -44,6 +44,7 @@ class FoodListResponse(BaseModel):
     name: str
     price: float
     image_url: Optional[str] = None
+    is_available: bool
 
     class Config:
         from_attributes = True

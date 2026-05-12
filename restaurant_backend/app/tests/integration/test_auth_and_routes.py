@@ -68,6 +68,7 @@ def test_food_crud_and_order_flow(client, admin_user, normal_user):
     list_foods = client.get("/foods")
     assert list_foods.status_code == 200
     assert any(item["id"] == food_id for item in list_foods.json())
+    assert next(item for item in list_foods.json() if item["id"] == food_id)["is_available"] is True
 
     order = client.post("/orders", headers=user_headers, json={"items": [{"food_id": food_id, "quantity": 2}]})
     assert order.status_code == 201

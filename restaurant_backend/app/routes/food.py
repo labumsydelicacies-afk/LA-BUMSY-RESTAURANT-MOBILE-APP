@@ -40,6 +40,7 @@ def _compact_food(food) -> dict:
         "name": food.name,
         "price": food.price,
         "image_url": food.image_url,
+        "is_available": food.is_available,
     }
 
 
