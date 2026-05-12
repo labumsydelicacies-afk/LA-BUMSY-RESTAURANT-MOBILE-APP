@@ -7,7 +7,7 @@
 import logging
 
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.db.models import Food, Order, OrderItem
 from app.schemas.order import OrderCreate
@@ -22,6 +22,13 @@ logging.basicConfig(
 
 # ------------------- VALID STATUSES ------------------- #
 VALID_STATUSES = ["pending_payment", "payment_failed", "pending", "confirmed", "preparing", "ready_for_pickup", "out_for_delivery", "delivered", "cancelled"]
+
+
+ORDER_SERIALIZATION_OPTIONS = (
+    selectinload(Order.items).joinedload(OrderItem.food),
+    selectinload(Order.delivery_verification),
+    joinedload(Order.rider),
+)
 
 
 # ------------------- CREATE ------------------- #
@@ -77,7 +84,7 @@ def create_order(db: Session, user_id: int, order_data: OrderCreate) -> Order:
             db.add(item)
 
         db.commit()
-        db.refresh(new_order)
+        new_order = get_order_by_id(db, new_order.id)
 
         logger.info(f"Order created : ID {new_order.id} | User {user_id} | Total : \u20a6{new_order.total_price}")
         return new_order
@@ -93,7 +100,12 @@ def create_order(db: Session, user_id: int, order_data: OrderCreate) -> Order:
 def get_order_by_id(db: Session, order_id: int) -> Order | None:
     """Fetches a single order by its ID."""
     try:
-        return db.query(Order).filter(Order.id == order_id).first()
+        return (
+            db.query(Order)
+            .options(*ORDER_SERIALIZATION_OPTIONS)
+            .filter(Order.id == order_id)
+            .first()
+        )
     except SQLAlchemyError as e:
         logger.error(f"Database error while fetching order by ID : {e}")
         raise
@@ -102,9 +114,15 @@ def get_order_by_id(db: Session, order_id: int) -> Order | None:
 def get_orders_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 50) -> list[Order]:
     """Fetches all orders placed by a specific user."""
     try:
-        return db.query(Order).filter(
-            Order.user_id == user_id
-        ).order_by(Order.id.desc()).offset(skip).limit(limit).all()
+        return (
+            db.query(Order)
+            .options(*ORDER_SERIALIZATION_OPTIONS)
+            .filter(Order.user_id == user_id)
+            .order_by(Order.id.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
     except SQLAlchemyError as e:
         logger.error(f"Database error while fetching orders for user {user_id} : {e}")
         raise
@@ -113,7 +131,14 @@ def get_orders_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 50
 def get_all_orders(db: Session, skip: int = 0, limit: int = 50) -> list[Order]:
     """Fetches all orders. Admin use only."""
     try:
-        return db.query(Order).order_by(Order.id.desc()).offset(skip).limit(limit).all()
+        return (
+            db.query(Order)
+            .options(*ORDER_SERIALIZATION_OPTIONS)
+            .order_by(Order.id.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
     except SQLAlchemyError as e:
         logger.error(f"Database error while fetching all orders : {e}")
         raise
@@ -125,9 +150,15 @@ def get_orders_by_status(db: Session, status: str, skip: int = 0, limit: int = 5
         raise ValueError(f"Invalid status '{status}'. Must be one of: {VALID_STATUSES}")
 
     try:
-        return db.query(Order).filter(
-            Order.status == status
-        ).order_by(Order.id.desc()).offset(skip).limit(limit).all()
+        return (
+            db.query(Order)
+            .options(*ORDER_SERIALIZATION_OPTIONS)
+            .filter(Order.status == status)
+            .order_by(Order.id.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
     except SQLAlchemyError as e:
         logger.error(f"Database error while fetching orders by status : {e}")
         raise
@@ -183,7 +214,7 @@ def update_order_status(db: Session, order_id: int, new_status: str, actor: str 
         order.status = normalized_status
 
         db.commit()
-        db.refresh(order)
+        order = get_order_by_id(db, order_id)
 
         logger.info(f"Order ID {order_id} status updated : {old_status} -> {new_status}")
         return order

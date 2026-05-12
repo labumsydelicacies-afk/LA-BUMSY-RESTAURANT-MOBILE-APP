@@ -3,10 +3,10 @@
 #==================================#
 
 import logging
+import time
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.config import CORS_ALLOW_ORIGIN_REGEX, CORS_ALLOW_ORIGINS
@@ -50,6 +50,20 @@ app.include_router(payment.router)
 app.include_router(profile.router)
 
 
+@app.middleware("http")
+async def log_request_timing(request: Request, call_next):
+    started = time.perf_counter()
+    response = await call_next(request)
+    duration_ms = (time.perf_counter() - started) * 1000
+    logger.info(
+        "%s %s completed in %.1fms",
+        request.method,
+        request.url.path,
+        duration_ms,
+    )
+    return response
+
+
 @app.get("/", tags=["Health"])
 def health_check():
     """Check if the API is running."""
@@ -81,18 +95,10 @@ def verify_schema():
 
         delivery_columns = [col["name"] for col in inspector.get_columns("delivery_verifications")]
         if "otp_code" not in delivery_columns:
-            logger.error("SCHEMA MISMATCH DETECTED: Missing otp_code in delivery_verifications table.")
-            # Backward-compatible hotfix for environments where migration c4d5e6f7a8b9
-            # has not yet been applied.
-            try:
-                with engine.begin() as conn:
-                    conn.execute(text("ALTER TABLE delivery_verifications ADD COLUMN otp_code VARCHAR"))
-                logger.warning("Auto-heal applied: added missing otp_code column to delivery_verifications.")
-            except SQLAlchemyError as exc:
-                logger.exception(
-                    "Failed to auto-add otp_code column. Run migrations immediately. Error: %s",
-                    exc,
-                )
+            logger.error(
+                "SCHEMA MISMATCH DETECTED: Missing otp_code in delivery_verifications table. "
+                "Run Alembic migrations before serving traffic."
+            )
     except SQLAlchemyError as exc:
         logger.exception("Schema verification failed at startup. App will continue running. Error: %s", exc)
 

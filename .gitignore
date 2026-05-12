@@ -1,6 +1,9 @@
 # Python-generated files
 __pycache__/
 *.py[oc]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 build/
 dist/
 wheels/
@@ -8,5 +11,15 @@ wheels/
 
 # Virtual environments
 .venv
+
 #keys and secrets
 .env
+.env.*
+!.env.example
+
+# Local editor settings
+.vscode/
+!.vscode/extensions.json
+
+# Local scratch scripts
+scratch_*.py

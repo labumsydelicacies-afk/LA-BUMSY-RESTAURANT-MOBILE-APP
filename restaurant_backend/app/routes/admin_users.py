@@ -9,7 +9,7 @@ All routes require is_admin=True.
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -25,8 +25,8 @@ router = APIRouter(prefix="/admin/users", tags=["Admin – Users"])
 
 @router.get("", response_model=list[UserResponse])
 def list_users(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(0, ge=0, le=10_000),
+    limit: int = Query(30, ge=1, le=100),
     db: Session = Depends(get_db),
     _=Depends(get_current_admin_user),
 ):

@@ -19,14 +19,27 @@ import random
 from datetime import datetime, timedelta
 
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.db.models import Delivery, DeliveryVerification, Order, User
+from app.db.models import Delivery, DeliveryVerification, Order, OrderItem, User
 from app.services.order_service import update_order_status
 
 logger = logging.getLogger(__name__)
 
 DELIVERY_OTP_EXPIRY_HOURS = 24
+
+
+ORDER_SERIALIZATION_OPTIONS = (
+    selectinload(Order.items).joinedload(OrderItem.food),
+    selectinload(Order.delivery_verification),
+    joinedload(Order.rider),
+)
+
+DELIVERY_SERIALIZATION_OPTIONS = (
+    joinedload(Delivery.order).selectinload(Order.items).joinedload(OrderItem.food),
+    joinedload(Delivery.order).selectinload(Order.delivery_verification),
+    joinedload(Delivery.order).joinedload(Order.rider),
+)
 
 
 # ─── helpers ────────────────────────────────────────────────────────────────
@@ -214,6 +227,7 @@ def get_my_deliveries(db: Session, rider_id: int) -> list[Delivery]:
     """Returns all deliveries assigned to the calling rider."""
     return (
         db.query(Delivery)
+        .options(*DELIVERY_SERIALIZATION_OPTIONS)
         .filter(Delivery.rider_id == rider_id)
         .order_by(Delivery.assigned_at.desc())
         .all()
@@ -227,6 +241,7 @@ def get_available_orders(db: Session) -> list[Order]:
     """
     return (
         db.query(Order)
+        .options(*ORDER_SERIALIZATION_OPTIONS)
         .filter(Order.status == "ready_for_pickup", Order.rider_id.is_(None))
         .order_by(Order.created_at.asc())
         .all()
@@ -239,6 +254,7 @@ def get_all_deliveries(db: Session, skip: int = 0, limit: int = 50) -> list[Deli
     """Returns all deliveries for admin visibility."""
     return (
         db.query(Delivery)
+        .options(*DELIVERY_SERIALIZATION_OPTIONS)
         .order_by(Delivery.assigned_at.desc())
         .offset(skip)
         .limit(limit)
@@ -247,4 +263,9 @@ def get_all_deliveries(db: Session, skip: int = 0, limit: int = 50) -> list[Deli
 
 
 def get_delivery_by_order(db: Session, order_id: int) -> Delivery | None:
-    return db.query(Delivery).filter(Delivery.order_id == order_id).first()
+    return (
+        db.query(Delivery)
+        .options(*DELIVERY_SERIALIZATION_OPTIONS)
+        .filter(Delivery.order_id == order_id)
+        .first()
+    )

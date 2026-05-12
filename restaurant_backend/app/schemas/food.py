@@ -37,3 +37,13 @@ class FoodResponse(FoodBase):
 
     class Config:
         from_attributes = True
+
+
+class FoodListResponse(BaseModel):
+    id: int
+    name: str
+    price: float
+    image_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True

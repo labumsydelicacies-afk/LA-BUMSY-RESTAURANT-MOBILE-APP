@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.schemas.food import FoodCreate, FoodResponse, FoodUpdate
+from app.schemas.food import FoodCreate, FoodListResponse, FoodResponse, FoodUpdate
 from app.db import get_db
 from app.services.food_service import (
     create_food,
@@ -20,6 +20,7 @@ from app.services.food_service import (
     toggle_availability,
 )
 from app.utils.security import get_current_admin_user
+from app.utils.cache import get_cache, set_cache
 
 logger = logging.getLogger(__name__)
 
@@ -29,10 +30,36 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=list[FoodResponse])
+FOOD_LIST_TTL_SECONDS = 10 * 60
+FOOD_ADMIN_LIST_TTL_SECONDS = 5 * 60
+
+
+def _compact_food(food) -> dict:
+    return {
+        "id": food.id,
+        "name": food.name,
+        "price": food.price,
+        "image_url": food.image_url,
+    }
+
+
+def _full_food(food) -> dict:
+    return {
+        "id": food.id,
+        "name": food.name,
+        "description": food.description,
+        "price": food.price,
+        "image_url": food.image_url,
+        "is_available": food.is_available,
+        "created_at": food.created_at,
+        "updated_at": food.updated_at,
+    }
+
+
+@router.get("", response_model=list[FoodListResponse])
 def list_foods(
     skip: int = Query(0, ge=0, le=10_000),
-    limit: int = Query(100, ge=1, le=100),
+    limit: int = Query(30, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
     """
@@ -44,7 +71,14 @@ def list_foods(
         db: Database session
     """
     try:
-        return get_all_foods(db, skip=skip, limit=limit)
+        cache_key = f"foods:list:{skip}:{limit}"
+        cached = get_cache(cache_key)
+        if cached is not None:
+            return cached
+
+        foods = [_compact_food(food) for food in get_all_foods(db, skip=skip, limit=limit)]
+        set_cache(cache_key, foods, FOOD_LIST_TTL_SECONDS)
+        return foods
     except Exception as exc:
         logger.exception("Unexpected error fetching food items")
         raise HTTPException(
@@ -56,7 +90,7 @@ def list_foods(
 @router.get("/admin", response_model=list[FoodResponse])
 def list_foods_admin(
     skip: int = Query(0, ge=0, le=10_000),
-    limit: int = Query(100, ge=1, le=200),
+    limit: int = Query(30, ge=1, le=200),
     db: Session = Depends(get_db),
     _=Depends(get_current_admin_user),
 ):
@@ -69,7 +103,14 @@ def list_foods_admin(
         db: Database session
     """
     try:
-        return get_all_foods_admin(db, skip=skip, limit=limit)
+        cache_key = f"foods:admin:{skip}:{limit}"
+        cached = get_cache(cache_key)
+        if cached is not None:
+            return cached
+
+        foods = [_full_food(food) for food in get_all_foods_admin(db, skip=skip, limit=limit)]
+        set_cache(cache_key, foods, FOOD_ADMIN_LIST_TTL_SECONDS)
+        return foods
     except Exception as exc:
         logger.exception("Unexpected error fetching admin food items")
         raise HTTPException(

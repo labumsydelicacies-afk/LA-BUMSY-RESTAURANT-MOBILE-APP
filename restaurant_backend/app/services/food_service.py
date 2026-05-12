@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import Food
 from app.schemas.food import FoodCreate, FoodUpdate
+from app.utils.cache import delete_cache_prefix
 
 
 # ------------------- Logger Setup ------------------- #
@@ -53,6 +54,7 @@ def create_food(db: Session, food_data: FoodCreate) -> Food:
         db.add(new_food)
         db.commit()
         db.refresh(new_food)
+        invalidate_food_cache()
         logger.info(f"Food item created : {new_food.name} | Price : ${new_food.price}")
         return new_food
     except SQLAlchemyError as e:
@@ -121,6 +123,7 @@ def update_food(db: Session, food_id: int, food_data: FoodUpdate) -> Food:
 
         db.commit()
         db.refresh(food)
+        invalidate_food_cache()
         logger.info(f"Food item updated : ID {food_id} | {update_data}")
         return food
     except SQLAlchemyError as e:
@@ -140,6 +143,7 @@ def toggle_availability(db: Session, food_id: int) -> Food:
         food.is_available = not food.is_available
         db.commit()
         db.refresh(food)
+        invalidate_food_cache()
         logger.info(f"Food availability toggled : {food.name} | Available : {food.is_available}")
         return food
     except SQLAlchemyError as e:
@@ -160,9 +164,15 @@ def delete_food(db: Session, food_id: int) -> bool:
     try:
         db.delete(food)
         db.commit()
+        invalidate_food_cache()
         logger.info(f"Food item deleted : ID {food_id} | {food.name}")
         return True
     except SQLAlchemyError as e:
         db.rollback()
         logger.error(f"Database error while deleting food item : {e}")
         raise
+
+
+def invalidate_food_cache() -> None:
+    """Clear public/admin food list caches after any food mutation."""
+    delete_cache_prefix("foods:")

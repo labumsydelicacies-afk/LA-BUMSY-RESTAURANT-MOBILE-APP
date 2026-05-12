@@ -4,7 +4,7 @@
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.schemas.order import OrderCreate, OrderResponse, OrderStatusUpdate
@@ -55,6 +55,8 @@ def place_order(
 
 @router.get("", response_model=list[OrderResponse])
 def get_orders(
+    skip: int = Query(0, ge=0, le=10_000),
+    limit: int = Query(30, ge=1, le=100),
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user),
 ):
@@ -66,8 +68,8 @@ def get_orders(
     try:
         if getattr(current_user, "is_admin", False):
             # Admins/riders might need all orders
-            return get_all_orders(db)
-        return get_orders_by_user(db, current_user.id)
+            return get_all_orders(db, skip=skip, limit=limit)
+        return get_orders_by_user(db, current_user.id, skip=skip, limit=limit)
     except Exception as exc:
         logger.exception("Failed to fetch orders for user %s", current_user.id)
         raise HTTPException(
