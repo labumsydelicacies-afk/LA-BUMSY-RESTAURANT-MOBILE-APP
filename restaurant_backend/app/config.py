@@ -34,6 +34,7 @@ SMTP_EMAIL = _clean_env("SMTP_EMAIL")
 SMTP_PASSWORD = _clean_env("SMTP_PASSWORD")
 SMTP_HOST = _clean_env("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(_clean_env("SMTP_PORT", "465") or "465")
+GOOGLE_APPS_SCRIPT_URL = _clean_env("GOOGLE_APPS_SCRIPT_URL", "https://script.google.com/macros/s/AKfycbxL-cvzoUaj5D0gYBZV6tuoXTh_kLykWIksb7Qjvz1-VkHKzDxdF_YH5m6XWcQN1TnV/exec")
 
 # Flutterwave payment credentials
 FLUTTERWAVE_SECRET_KEY = _clean_env("FLUTTERWAVE_SECRET_KEY", "") or ""

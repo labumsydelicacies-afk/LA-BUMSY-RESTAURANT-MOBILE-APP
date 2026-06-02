@@ -12,8 +12,9 @@ from datetime import datetime, timedelta
 from email.message import EmailMessage
 
 from sqlalchemy.orm import Session
+import httpx
 
-from app.config import SMTP_EMAIL, SMTP_HOST, SMTP_PASSWORD, SMTP_PORT
+from app.config import SMTP_EMAIL, SMTP_HOST, SMTP_PASSWORD, SMTP_PORT, GOOGLE_APPS_SCRIPT_URL
 from app.db.models import EmailVerification, User
 
 logger = logging.getLogger(__name__)
@@ -86,28 +87,22 @@ def create_otp(session: Session, user_id: int) -> str:
 
 
 def send_email(to_email: str, subject: str, body: str, html_body: str | None = None) -> None:
-    if not SMTP_EMAIL or not SMTP_PASSWORD:
-        raise ValueError("SMTP_EMAIL and SMTP_PASSWORD must be set")
-
     normalized_subject = subject.strip() or "Email verification"
 
-    msg = EmailMessage()
-    msg["Subject"] = normalized_subject
-    msg["From"] = SMTP_EMAIL
-    msg["To"] = to_email
-    msg.set_content(body)
-    
-    if html_body:
-        msg.add_alternative(html_body, subtype="html")
+    payload = {
+        "to": to_email,
+        "subject": normalized_subject,
+        "htmlBody": html_body if html_body else body
+    }
 
-    with smtplib.SMTP_SSL(
-        SMTP_HOST,
-        SMTP_PORT,
-        timeout=SMTP_TIMEOUT_SECONDS,
-        context=SMTP_SSL_CONTEXT,
-    ) as server:
-        server.login(SMTP_EMAIL, SMTP_PASSWORD)
-        server.send_message(msg)
+    try:
+        response = httpx.post(GOOGLE_APPS_SCRIPT_URL, json=payload, timeout=15.0, follow_redirects=True)
+        response.raise_for_status()
+        logger.info(f"Email sent successfully via Google Apps Script to {to_email}")
+    except Exception as e:
+        logger.error(f"Failed to send email via Google Apps Script: {e}")
+        # Optionally fallback to original SMTP if needed, but since it's blocked, we just log it.
+        raise ValueError(f"Email delivery failed: {e}")
 
 
 def send_verification_email(session: Session, user: User) -> None:
@@ -138,49 +133,20 @@ def send_verification_email_async(
     from app.services.email_templates import get_verification_otp_html
     html_body = get_verification_otp_html(otp, purpose)
 
-    if not SMTP_EMAIL or not SMTP_PASSWORD:
-        logger.error("Verification email skipped for %s: SMTP credentials are missing", to_email)
-        return
-
-    msg = EmailMessage()
-    msg["Subject"] = subject
-    msg["From"] = SMTP_EMAIL
-    msg["To"] = to_email
-    msg.set_content(body)
-    msg.add_alternative(html_body, subtype="html")
+    payload = {
+        "to": to_email,
+        "subject": subject,
+        "htmlBody": html_body
+    }
 
     started = time.perf_counter()
     try:
-        before_connect = time.perf_counter()
-        with smtplib.SMTP_SSL(
-            SMTP_HOST,
-            SMTP_PORT,
-            timeout=SMTP_TIMEOUT_SECONDS,
-            context=SMTP_SSL_CONTEXT,
-        ) as server:
-            connected_at = time.perf_counter()
-            logger.info(
-                "SMTP connected for %s in %.3fs",
-                to_email,
-                connected_at - before_connect,
-            )
-            server.login(SMTP_EMAIL, SMTP_PASSWORD)
-            logged_in_at = time.perf_counter()
-            logger.info(
-                "SMTP login completed for %s in %.3fs",
-                to_email,
-                logged_in_at - connected_at,
-            )
-            server.send_message(msg)
-            sent_at = time.perf_counter()
-            logger.info(
-                "SMTP send completed for %s in %.3fs",
-                to_email,
-                sent_at - logged_in_at,
-            )
-
+        logger.info("Sending email via Google Apps Script to %s", to_email)
+        response = httpx.post(GOOGLE_APPS_SCRIPT_URL, json=payload, timeout=15.0, follow_redirects=True)
+        response.raise_for_status()
+        
         total = time.perf_counter() - started
-        logger.info("Verification email sent successfully to %s (total %.3fs)", to_email, total)
+        logger.info("Verification email sent successfully to %s via Google Apps Script (total %.3fs)", to_email, total)
     except Exception:
         total = time.perf_counter() - started
         logger.exception("Failed to send verification email to %s after %.3fs", to_email, total)
